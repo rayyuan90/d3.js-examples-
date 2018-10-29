@@ -5,13 +5,13 @@
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   width: 960px;
-  height: 500px;
+  /* height: 500px; */
   position: relative;
 }
 
 svg {
 	width: 100%;
-	height: 100%;
+	/* height: 100%; */
 }
 
 path.slice{
@@ -34,6 +34,8 @@ polyline{
 
 var svg = d3.select("body")
 	.append("svg")
+  // .attr("width", 760)
+  .attr("height", 760)
 	.append("g")
 svg.append("g")
 	.attr("class", "slices");
@@ -46,11 +48,20 @@ svg.append("text")
         .style("font-size", "16px")
         .style("text-decoration", "underline")
         .text("Value vs Date Graph")
+svg.append("g")
+   .attr("class","legends")
+   .attr("transform", "translate(" + -100 + ", " + 0.5 * 450 + ")");
+
 
 
 var width = 960,
     height = 450,
 	radius = Math.min(width, height) / 2;
+  var chartWidth       = 200,
+      barHeight        = 30,
+      gapBetweenGroups = 20,
+      spaceForLabels   = 150,
+      spaceForLegend   = 150;
 
 var pie = d3.layout.pie()
 	.sort(null)
@@ -71,7 +82,7 @@ var key = function(d){ return d.data.label; };
 
 var color = d3.scale.ordinal()
 	.domain(["Lorem ipsum", "dolor sit", "amet", "consectetur", "adipisicing", "elit", "sed"])
-	.range(["#ff0033", "#FFF6FF", "#FFFF00", "#00ff33", "#003399", "#9900cc", "#990066"]);
+	.range(["#ff0033", "#FFF68F", "#FFFF00", "#00ff33", "#003399", "#9900cc", "#990066"]);
 
 function randomData (){
 	var labels = color.domain();
@@ -187,6 +198,35 @@ function change(data) {
 
 	polyline.exit()
 		.remove();
+
+    // Draw legend
+    var legendRectSize = 28,
+        legendSpacing  = 8;
+
+    var legend = svg.select(".legends").selectAll('.legend')
+        .data(pie(data), key)
+        .enter()
+        .append('g')
+        .attr('transform', function (d, i) {
+            var height = legendRectSize + legendSpacing;
+            var offset = -gapBetweenGroups/2;
+            var horz = spaceForLabels + chartWidth + 40 - legendRectSize;
+            var vert = i * height - offset;
+            return 'translate(' + horz + ',' + vert + ')';
+        });
+
+    legend.append('rect')
+        .attr('width', legendRectSize)
+        .attr('height', legendRectSize)
+        .style('fill', function (d, i) { return color(d.data.label); })
+        .style('stroke', function (d, i) { return color(d.data.label); });
+
+    legend.append('text')
+        .attr('class', 'legend')
+        .attr('x', legendRectSize + legendSpacing)
+        .attr('y', legendRectSize - legendSpacing)
+        .text(function (d) { return d.data.label; });
+
 };
 
 </script>
