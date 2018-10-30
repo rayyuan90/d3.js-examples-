@@ -152,7 +152,8 @@ var svg = d3.select("#chart").append("svg")
 /* Add line into SVG */
 var line = d3.line()
   .x(d => xScale(d.date))
-  .y(d => yScale(d.price));
+  .y(d => yScale(d.price))
+  .curve(d3.curveCardinal); // this is set the line to curve smoothly
 
 let lines = svg.append('g')
   .attr('class', 'lines');
