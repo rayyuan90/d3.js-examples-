@@ -73,7 +73,7 @@ function makeLineChart(dataset, xName, yObjs, axisLables) {
         };
     }
     for (var yObj in yObjs) {
-        yObjs[yObj].line = d3.svg.line().interpolate("cardinal").x(function (d) {
+        yObjs[yObj].line = d3.svg.line().x(function (d) {
             return chartObj.xScale(chartObj.xFunct(d));
         }).y(getYScaleFn(yObj));
     }
