@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="multiline.css">
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="multiline.js" charset="utf-8"></script>
+    <!-- <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> -->
+</head>
+<body>
+<div class="chart-wrapper" id="chart-line1"></div>
+
+<script type="text/javascript">
+    // d3.csv('multiline_data.csv', function(error, data) {
+function getData (){
+
+    data = [
+    {
+        "year": "1980",
+        "variableA": "70",
+        "variableB": "52",
+        "variableC": "145",
+        "variableD": "75"
+    },
+    {
+        "year": "1981",
+        "variableA": "77",
+        "variableB": "51",
+        "variableC": "156",
+        "variableD": "80"
+    },
+    {
+        "year": "1982",
+        "variableA": "81",
+        "variableB": "55",
+        "variableC": "169",
+        "variableD": "79"
+    },
+    {
+        "year": "1983",
+        "variableA": "78",
+        "variableB": "55",
+        "variableC": "171",
+        "variableD": "91"
+    },
+    {
+        "year": "1984",
+        "variableA": "80",
+        "variableB": "55",
+        "variableC": "187",
+        "variableD": "102"
+    },
+    {
+        "year": "1985",
+        "variableA": "79",
+        "variableB": "53",
+        "variableC": "199",
+        "variableD": "103"
+    },
+    {
+        "year": "1986",
+        "variableA": "79",
+        "variableB": "54",
+        "variableC": "204",
+        "variableD": "102"
+    },
+    {
+        "year": "1987",
+        "variableA": "78",
+        "variableB": "53",
+        "variableC": "218",
+        "variableD": "104"
+    },
+    {
+        "year": "1988",
+        "variableA": "75",
+        "variableB": "51",
+        "variableC": "232",
+        "variableD": "105"
+    },
+    {
+        "year": "1989",
+        "variableA": "78",
+        "variableB": "48",
+        "variableC": "233",
+        "variableD": "106"
+    },
+    {
+        "year": "1990",
+        "variableA": "76",
+        "variableB": "51",
+        "variableC": "233",
+        "variableD": "112"
+    },
+    {
+        "year": "1991",
+        "variableA": "73",
+        "variableB": "55",
+        "variableC": "232",
+        "variableD": "111"
+    },
+    {
+        "year": "1992",
+        "variableA": "70",
+        "variableB": "52",
+        "variableC": "240",
+        "variableD": "122"
+    },
+    {
+        "year": "1993",
+        "variableA": "69",
+        "variableB": "50",
+        "variableC": "256",
+        "variableD": "122"
+    },
+    {
+        "year": "1994",
+        "variableA": "74",
+        "variableB": "50",
+        "variableC": "273",
+        "variableD": "131"
+    },
+    {
+        "year": "1995",
+        "variableA": "71",
+        "variableB": "51",
+        "variableC": "286",
+        "variableD": "128"
+    },
+    {
+        "year": "1996",
+        "variableA": "71",
+        "variableB": "53",
+        "variableC": "283",
+        "variableD": "129"
+    },
+    {
+        "year": "1997",
+        "variableA": "76",
+        "variableB": "51",
+        "variableC": "292",
+        "variableD": "126"
+    },
+    {
+        "year": "1998",
+        "variableA": "81",
+        "variableB": "49",
+        "variableC": "298",
+        "variableD": "132"
+    },
+    {
+        "year": "1999",
+        "variableA": "80",
+        "variableB": "53",
+        "variableC": "313",
+        "variableD": "142"
+    },
+    {
+        "year": "2000",
+        "variableA": "77",
+        "variableB": "59",
+        "variableC": "321",
+        "variableD": "152"
+    },
+    {
+        "year": "2001",
+        "variableA": "82",
+        "variableB": "63",
+        "variableC": "338",
+        "variableD": "162"
+    },
+    {
+        "year": "2002",
+        "variableA": "88",
+        "variableB": "67",
+        "variableC": "337",
+        "variableD": "171"
+    },
+    {
+        "year": "2003",
+        "variableA": "90",
+        "variableB": "69",
+        "variableC": "338",
+        "variableD": "177"
+    },
+    {
+        "year": "2004",
+        "variableA": "90",
+        "variableB": "75",
+        "variableC": "338",
+        "variableD": "183"
+    },
+    {
+        "year": "2005",
+        "variableA": "92",
+        "variableB": "80",
+        "variableC": "351",
+        "variableD": "180"
+    },
+    {
+        "year": "2006",
+        "variableA": "93",
+        "variableB": "87",
+        "variableC": "367",
+        "variableD": "188"
+    },
+    {
+        "year": "2007",
+        "variableA": "91",
+        "variableB": "91",
+        "variableC": "375",
+        "variableD": "186"
+    },
+    {
+        "year": "2008",
+        "variableA": "90",
+        "variableB": "96",
+        "variableC": "374",
+        "variableD": "195"
+    },
+    {
+        "year": "2009",
+        "variableA": "97",
+        "variableB": "97",
+        "variableC": "385",
+        "variableD": "207"
+    },
+    {
+        "year": "2010",
+        "variableA": "104",
+        "variableB": "101",
+        "variableC": "401",
+        "variableD": "206"
+    },
+    {
+        "year": "2011",
+        "variableA": "111",
+        "variableB": "106",
+        "variableC": "403",
+        "variableD": "205"
+    },
+    {
+        "year": "2012",
+        "variableA": "115",
+        "variableB": "105",
+        "variableC": "417",
+        "variableD": "204"
+    },
+    {
+        "year": "2013",
+        "variableA": "117",
+        "variableB": "108",
+        "variableC": "420",
+        "variableD": "211"
+    },
+    {
+        "year": "2014",
+        "variableA": "121",
+        "variableB": "107",
+        "variableC": "436",
+        "variableD": "217"
+    },
+    {
+        "year": "2015",
+        "variableA": "121",
+        "variableB": "104",
+        "variableC": "449",
+        "variableD": "216"
+    }
+];
+    data.forEach(function (d) {
+        d.year = +d.year;
+        d.variableA = +d.variableA;
+        d.variableB = +d.variableB;
+        d.variableC = +d.variableC;
+        d.variableD = +d.variableD;
+    });
+
+    var chart = makeLineChart(data, 'year', {
+        'Variable A': {column: 'variableA'},
+        'Variable B': {column: 'variableB'},
+        'Variable C': {column: 'variableC'},
+        'Variable D': {column: 'variableD'}
+    }, {xAxis: 'Years', yAxis: 'Amount'});
+    chart.bind("#chart-line1");
+    chart.render();
+
+};
+getData();
+</script>
+</body>
+</html>
