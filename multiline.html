@@ -48,6 +48,9 @@ svg {
     margin-right: 4px;
     margin-bottom: -0.16rem;
 }
+.x.axis text{
+  font-size:12px;
+}
 
 </style>
 <body>
@@ -247,15 +250,7 @@ lines.selectAll("circle-group")
 /* Add Axis into SVG */
 var xAxis = d3.axisBottom(xScale).ticks(5);
 var yAxis = d3.axisLeft(yScale).ticks(15);
-
-var legend = d3.select("#chart").append('div').attr("class", "legend");
-for (var y  in data) {
-    series = legend.append('div');
-    series.append('div').attr("class", "series-marker").style("background-color", color(y));
-    series.append('p').text(data[y].name);
-    data[y].legend = series;
-}
-
+//add x axis
 svg.append("g")
   .attr("class", "x axis")
   .attr("transform", `translate(0, ${height-margin})`)
@@ -266,13 +261,23 @@ svg.append("g")
   // .attr("transform", "rotate(-90)")
   .attr("fill", "#000")
   .text("Year");;
-
+// add y axis
 svg.append("g")
   .attr("class", "y axis")
   .call(yAxis)
   .append('text')
-  .attr("y", 15)
+  .attr("y", -39)
+  .attr("x", 0)
   .attr("transform", "rotate(-90)")
   .attr("fill", "#000")
   .text("Total values");
+
+  // add legends
+  var legend = d3.select("#chart").append('div').attr("class", "legend");
+  for (var y  in data) {
+      series = legend.append('div');
+      series.append('div').attr("class", "series-marker").style("background-color", color(y));
+      series.append('p').text(data[y].name);
+      data[y].legend = series;
+  }
 </script>
