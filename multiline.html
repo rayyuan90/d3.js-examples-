@@ -50,6 +50,7 @@ svg {
 }
 .x.axis text{
   font-size:12px;
+  text-align:right;
 }
 
 </style>
@@ -267,7 +268,7 @@ svg.append("g")
   .call(yAxis)
   .append('text')
   .attr("y", -39)
-  .attr("x", 0)
+  .attr("x", -200)
   .attr("transform", "rotate(-90)")
   .attr("fill", "#000")
   .text("Total values");
