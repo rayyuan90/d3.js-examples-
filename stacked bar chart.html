@@ -182,7 +182,7 @@ var legend = svg.selectAll(".legend")
 
 legend.append("rect")
   .attr("x", width - 18)
-  .attr("width", 18)
+  <!-- .attr("width", 18) -->
   .attr("height", 18)
   .style("fill", function(d, i) {return colors.slice().reverse()[i];});
 
