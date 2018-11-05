@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>d3.js learning</title>
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
   <style type="text/css">
   svg {
     font: 10px sans-serif;
@@ -23,6 +24,35 @@
   .y .tick line {
     stroke: #ddd;
   }
+
+    .d3-tip {
+      line-height: 1;
+      font-weight: bold;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      border-radius: 2px;
+    }
+
+    /* Creates a small triangle extender for the tooltip */
+    .d3-tip:after {
+      box-sizing: border-box;
+      display: inline;
+      font-size: 10px;
+      width: 100%;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.8);
+      content: "\25BC";
+      position: absolute;
+      text-align: center;
+    }
+
+    /* Style northward tooltips differently */
+    .d3-tip.n:after {
+      margin: -1px 0 0 0;
+      top: 100%;
+      left: 0;
+    }
   </style>
 
 </head>
@@ -68,10 +98,16 @@ var parse = d3.time.format("%Y").parse;
 // Transpose the data into layers
 var dataset = d3.layout.stack()(["redDelicious", "mcintosh", "oranges", "pears"].map(function(fruit) {
   return data.map(function(d) {
-    return {x: parse(d.year), y: +d[fruit]};
+    return {x: parse(d.year), y: +d[fruit], "fruit":fruit};
   });
 }));
 
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>使用量:</strong> <span style='color:red'>" + d.y + "</span>";
+  });
 
 // Set x, y and colors
 var x = d3.scale.ordinal()
@@ -82,7 +118,7 @@ var y = d3.scale.linear()
   .domain([0, d3.max(dataset, function(d) {  return d3.max(d, function(d) { return d.y0 + d.y; });  })])
   .range([height, 0]);
 
-var colors = ["b33040", "#d25c4d", "#f2b447", "#d9d574"];
+var colors = ["#EA4335", "#FBBC05", "#4285F4", "#34A853"];
 
 
 // Define and draw axes
@@ -97,6 +133,8 @@ var xAxis = d3.svg.axis()
   .scale(x)
   .orient("bottom")
   .tickFormat(d3.time.format("%Y"));
+
+ <!-- svg.call(tip); -->
 
 svg.append("g")
   .attr("class", "y axis")
@@ -123,14 +161,16 @@ var rect = groups.selectAll("rect")
   .attr("y", function(d) { return y(d.y0 + d.y); })
   .attr("height", function(d) { return y(d.y0) - y(d.y0 + d.y); })
   .attr("width", x.rangeBand())
-  .on("mouseover", function() { tooltip.style("display", null); })
   .on("mouseout", function() { tooltip.style("display", "none"); })
+  .on("mouseover", function() { tooltip.style("display", null); })
+  <!-- .on("mouseover", function() { tip.show }) -->
+  <!-- .on("mouseout", function() { tip.hide }) -->
   .on("mousemove", function(d) {
-    var xPosition = d3.mouse(this)[0] - 15;
-    var yPosition = d3.mouse(this)[1] - 25;
-    tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
-    tooltip.select("text").text(d.y);
-  });
+     var xPosition = d3.mouse(this)[0] - 15;
+     var yPosition = d3.mouse(this)[1] - 25;
+     tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+     tooltip.select("text").text(d.fruit +": " + d.y);
+   });
 
 
 // Draw legend
@@ -159,7 +199,6 @@ legend.append("text")
       case 3: return "预约挂号";
     }
   });
-
 
 // Prep the tooltip bits, initial display is hidden
 var tooltip = svg.append("g")
