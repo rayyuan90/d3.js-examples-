@@ -58,6 +58,8 @@ var data = [
   { year: "2014", redDelicious: "10", mcintosh: "13", oranges: "9", pears: "5" },
   { year: "2015", redDelicious: "16", mcintosh: "19", oranges: "6", pears: "9" },
   { year: "2016", redDelicious: "19", mcintosh: "17", oranges: "5", pears: "7" },
+  { year: "2017", redDelicious: "9", mcintosh: "27", oranges: "15", pears: "6" },
+  { year: "2018", redDelicious: "19", mcintosh: "17", oranges: "5", pears: "7" },
 ];
 
 var parse = d3.time.format("%Y").parse;
@@ -74,7 +76,7 @@ var dataset = d3.layout.stack()(["redDelicious", "mcintosh", "oranges", "pears"]
 // Set x, y and colors
 var x = d3.scale.ordinal()
   .domain(dataset[0].map(function(d) { return d.x; }))
-  .rangeRoundBands([10, width-10], 0.02);
+  .rangeRoundBands([10, width-10], 0.4);
 
 var y = d3.scale.linear()
   .domain([0, d3.max(dataset, function(d) {  return d3.max(d, function(d) { return d.y0 + d.y; });  })])
@@ -151,10 +153,10 @@ legend.append("text")
   .style("text-anchor", "start")
   .text(function(d, i) {
     switch (i) {
-      case 0: return "Anjou pears";
-      case 1: return "Naval oranges";
-      case 2: return "McIntosh apples";
-      case 3: return "Red Delicious apples";
+      case 0: return "咨询";
+      case 1: return "随访";
+      case 2: return "远程门诊";
+      case 3: return "预约挂号";
     }
   });
 
