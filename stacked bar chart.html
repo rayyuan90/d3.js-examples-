@@ -77,26 +77,26 @@ var svg = d3.select("body")
 /* Data in strings like it would be if imported from a csv */
 
 var data = [
-  { year: "2006", redDelicious: "10", mcintosh: "15", oranges: "9", pears: "6" },
-  { year: "2007", redDelicious: "12", mcintosh: "18", oranges: "9", pears: "4" },
-  { year: "2008", redDelicious: "05", mcintosh: "20", oranges: "8", pears: "2" },
-  { year: "2009", redDelicious: "01", mcintosh: "15", oranges: "5", pears: "4" },
-  { year: "2010", redDelicious: "02", mcintosh: "10", oranges: "4", pears: "2" },
-  { year: "2011", redDelicious: "03", mcintosh: "12", oranges: "6", pears: "3" },
-  { year: "2012", redDelicious: "04", mcintosh: "15", oranges: "8", pears: "1" },
-  { year: "2013", redDelicious: "06", mcintosh: "11", oranges: "9", pears: "4" },
-  { year: "2014", redDelicious: "10", mcintosh: "13", oranges: "9", pears: "5" },
-  { year: "2015", redDelicious: "16", mcintosh: "19", oranges: "6", pears: "9" },
-  { year: "2016", redDelicious: "19", mcintosh: "17", oranges: "5", pears: "7" },
-  { year: "2017", redDelicious: "9", mcintosh: "27", oranges: "15", pears: "6" },
-  { year: "2018", redDelicious: "19", mcintosh: "17", oranges: "5", pears: "7" },
+  { year: "2006", 预约挂号: "10", 远程门诊: "15", 随访: "9", 咨询: "6" },
+  { year: "2007", 预约挂号: "12", 远程门诊: "18", 随访: "9", 咨询: "4" },
+  { year: "2008", 预约挂号: "05", 远程门诊: "20", 随访: "8", 咨询: "2" },
+  { year: "2009", 预约挂号: "01", 远程门诊: "15", 随访: "5", 咨询: "4" },
+  { year: "2010", 预约挂号: "02", 远程门诊: "10", 随访: "4", 咨询: "2" },
+  { year: "2011", 预约挂号: "03", 远程门诊: "12", 随访: "6", 咨询: "3" },
+  { year: "2012", 预约挂号: "04", 远程门诊: "15", 随访: "8", 咨询: "1" },
+  { year: "2013", 预约挂号: "06", 远程门诊: "11", 随访: "9", 咨询: "4" },
+  { year: "2014", 预约挂号: "10", 远程门诊: "13", 随访: "9", 咨询: "5" },
+  { year: "2015", 预约挂号: "16", 远程门诊: "19", 随访: "6", 咨询: "9" },
+  { year: "2016", 预约挂号: "19", 远程门诊: "17", 随访: "5", 咨询: "7" },
+  { year: "2017", 预约挂号: "9", 远程门诊: "27", 随访: "15", 咨询: "6" },
+  { year: "2018", 预约挂号: "19", 远程门诊: "17", 随访: "5", 咨询: "7" },
 ];
 
 var parse = d3.time.format("%Y").parse;
 
 
 // Transpose the data into layers
-var dataset = d3.layout.stack()(["redDelicious", "mcintosh", "oranges", "pears"].map(function(fruit) {
+var dataset = d3.layout.stack()(["预约挂号", "远程门诊", "随访", "咨询"].map(function(fruit) {
   return data.map(function(d) {
     return {x: parse(d.year), y: +d[fruit], "fruit":fruit};
   });
