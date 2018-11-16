@@ -38,7 +38,9 @@ var svg = d3.select("body")
   .attr("height", 760)
 	.append("g")
 svg.append("g")
-	.attr("class", "slices");
+	.attr("class", "slices")
+  .transition()
+  .duration(3000);
 svg.append("g")
 	.attr("class", "labels");
 svg.append("g")
@@ -69,8 +71,8 @@ var pie = d3.layout.pie()
 		return d.value;
 	});
 var arc = d3.svg.arc()
-	.outerRadius(radius * 0.5)
-	.innerRadius(radius * 0.4);
+	.outerRadius(radius * 0.8)
+	.innerRadius(radius * 0.2);
 
 var outerArc = d3.svg.arc()
 	.innerRadius(radius * 0.9)
@@ -106,23 +108,39 @@ function change(data) {
 		.data(pie(data), key);
 
 	slice.enter()
-		.insert("path")
+		.append("path")
 		.style("fill", function(d) { return color(d.data.label); })
-		.attr("class", "slice");
+		.attr("class", "slice")
+    .transition().delay(function(d,i) {
+	return i * 500; }).duration(500)
+  .attrTween('d', function(d) {
+    var i = d3.interpolate(d.startAngle+0, d.endAngle);
+    return function(t) {
+      d.endAngle = i(t);
+      return arc(d)
+      }
+    });
 
 	slice
-		.transition().duration(1000)
-		.attrTween("d", function(d) {
-		//console.log(this._current);
-		//console.log(d);
-			this._current = this._current || d;
-			var interpolate = d3.interpolate(this._current, d);
-			this._current = interpolate(1);
-			//console.log(this._current);
-			return function(t) {
-				return arc(interpolate(1));
-			};
-		})
+		// .transition().duration(2000)
+		// .attrTween("d", function(d) {
+		// //console.log(this._current);
+		// //console.log(d);
+		// 	this._current = this._current || d;
+		// 	var interpolate = d3.interpolate(this._current, d);
+		// 	this._current = interpolate(1);
+		// 	//console.log(this._current);
+		// 	return function(t) {
+		// 		return arc(interpolate(1));
+		// 	};
+		// })
+    // .attrTween('d', function(d) {
+    //   var i = d3.interpolate(d.startAngle+0, d.endAngle);
+    //   return function(t) {
+    //     d.endAngle = i(t);
+    //     return arc(d)
+    //     }
+    //   });
 
 	slice.exit()
 		.remove();
@@ -143,7 +161,7 @@ function change(data) {
 		return d.startAngle + (d.endAngle - d.startAngle)/2;
 	}
 
-	text.transition().duration(1000)
+	text.transition().duration(3000)
 		.attrTween("transform", function(d) {
 			this._current = this._current || d;
 			var interpolate = d3.interpolate(this._current, d);
@@ -180,7 +198,7 @@ function change(data) {
 	polyline.enter()
 		.append("polyline");
 
-	polyline.transition().duration(1000)
+	polyline.transition().duration(4000)
 		.attrTween("points", function(d){
 		//console.log(d);
 			this._current = this._current || d;
