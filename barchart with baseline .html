@@ -1,1553 +1,1614 @@
-
 <!DOCTYPE HTML>
 <meta charset="utf-8">
 <html>
+
 <head>
 
-<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400italic,600italic,700italic,200,300,400,600,700,900">
-<script src="http://d3js.org/d3.v3.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400italic,600italic,700italic,200,300,400,600,700,900">
+  <script src="http://d3js.org/d3.v3.min.js"></script>
 
-<style>
+  <style>
+    body,
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+      padding: 0;
+      font-family: 'Source Sans Pro', sans-serif;
+      font-size: 1em;
+      color: #333;
+      font-weight: 400;
+    }
 
-body, h1, h2, h3, p {
-  margin: 0;
-  padding: 0;
-  font-family: 'Source Sans Pro', sans-serif;
-  font-size: 1em;
-  color: #333;
-  font-weight: 400;
-}
+    #content {
+      margin: 5px;
+      padding: 20px;
+      width: 775px;
+      text-align: left;
+      border: 1px solid #ccc;
+    }
 
-#content {
-  margin: 5px;
-  padding: 20px;
-  width: 775px;
-  text-align: left;
-  border: 1px solid #ccc;
-}
+    h1 {
+      line-height: 1em;
+      font-size: 1.75em;
+      font-weight: 900;
+      color: #000;
+    }
 
-h1 {
-  line-height: 1em;
-  font-size: 1.75em;
-  font-weight: 900;
-  color: #000;
-}
+    p {
+      margin: 5px 0px 0px 0px;
+    }
 
-p {
-  margin: 5px 0px 0px 0px;
-}
+    .domain {
+      fill: none;
+      stroke-width: 0;
+    }
 
-.domain {
-  fill: none;
-  stroke-width: 0;
-}
+    #menu {
+      margin: 5px 0px 0px 0px;
+      display: block;
+    }
 
-#menu {
-  margin: 5px 0px 0px 0px;
-  display: block;
-}
+    #unit {
+      margin: 10px 0px 5px 0px;
+      font-size: 0.9em;
+    }
 
-#unit {
-  margin: 10px 0px 5px 0px;
-  font-size: 0.9em;
-}
+    select {
+      font-family: 'Source Sans Pro', sans-serif;
+      font-size: 0.9em;
+      color: #333;
+      font-weight: 400;
+    }
 
-select {
-  font-family: 'Source Sans Pro', sans-serif;
-  font-size: 0.9em;
-  color: #333;
-  font-weight: 400;
-}
+    .bar {
+      fill: #2980B9;
+    }
 
-.bar {
-  fill: #2980B9;
-}
+    .bar:hover {
+      fill: #2C3E50;
+    }
 
-.bar:hover {
-  fill: #2C3E50;
-}
+    .axis line {
+      stroke: #eee;
+      stroke-width: 1;
+      opacity: 0.5;
+      shape-rendering: crispEdges;
+    }
 
-.axis line {
-  stroke: #eee;
-  stroke-width: 1;
-  opacity: 0.5;
-  shape-rendering: crispEdges;
-}
+    .g-baseline line {
+      stroke: #333;
+      stroke-width: 2;
+      opacity: 1;
+      shape-rendering: crispEdges;
+    }
 
-.g-baseline line {
-  stroke: #333;
-  stroke-width: 2;
-  opacity: 1;
-  shape-rendering: crispEdges;
-}
-
-.x.axis .tick text, .y.axis .tick text {
-  fill: #333;
-  font-size: 0.9em;
-}
-
-</style>
+    .x.axis .tick text,
+    .y.axis .tick text {
+      fill: #333;
+      font-size: 0.9em;
+    }
+  </style>
 
 </head>
 
 <body>
-<div id="content">
-<h1>OECD Social Indicators, 2012</h1>
-  <select id="menu">
-	<option>Poverty rate</option>
-	<option>Infant mortality</option>
-	<option>Health expenditures</option>
-	<option>Education</option>
-	<option>Income inequality</option>
-	<option>Public social spending</option>
-	<option>Tax revenue</option>
-    <option>Employment to population ratio</option>
-    <option>GDP per capita</option>
-	<option>CO2 emissions</option>
-  </select>
+  <div id="content">
+    <h1>OECD Social Indicators, 2012</h1>
+    <select id="menu">
+      <option>Poverty rate</option>
+      <option>Infant mortality</option>
+      <option>Health expenditures</option>
+      <option>Education</option>
+      <option>Income inequality</option>
+      <option>Public social spending</option>
+      <option>Tax revenue</option>
+      <option>Employment to population ratio</option>
+      <option>GDP per capita</option>
+      <option>CO2 emissions</option>
+    </select>
 
-<p id="unit">Percent of population earning less than 50% of median household income</p>
+    <p id="unit">Percent of population earning less than 50% of median household income</p>
 
-<div id="chart"></div>
-<p>Source: OECD.</p>
-</div>
+    <div id="chart"></div>
+    <p>Source: OECD.</p>
+  </div>
 
-<script src="chart.js"></script>
-<script>
+  <script src="chart.js"></script>
+  <script>
+    var map = d3.map(),
+      barchart;
 
-var map = d3.map(),
-    barchart;
-	
-	d3.svg.barchart = function() {
+    d3.svg.barchart = function() {
 
-  var margin = {top: 10, right: 10, bottom: 20, left: 0},
-      width = 760,
-      height = 350,
-      padding = 0.25,
-      duration = 250,
-      tickFormat = null,
-      xValue = function(d){ return d[0]; },
-      yValue = function(d){ return d[1]; },
-      xDomain,
-      yDomain;
+      var margin = {
+          top: 10,
+          right: 10,
+          bottom: 20,
+          left: 0
+        },
+        width = 760,
+        height = 350,
+        padding = 0.25,
+        duration = 2500,
+        delay = 0,
+        tickFormat = null,
+        xValue = function(d) {
+          return d[0];
+        },
+        yValue = function(d) {
+          return d[1];
+        },
+        xDomain,
+        yDomain;
 
-  function barchart(selection) {
+      function barchart(selection) {
 
-    selection.each(function(datum, index) {
+        selection.each(function(datum, index) {
 
-      var data = datum.map(function(d, i) {
-        return [xValue.call(datum, d, i), yValue.call(datum, d, i)];
-      });
+          var data = datum.map(function(d, i) {
+            return [xValue.call(datum, d, i), yValue.call(datum, d, i)];
+          });
 
-      var xScale = d3.scale.ordinal()
-          .domain(xDomain ? xDomain.call(this) : data.map(function(d){ return d[0]; }))
-          .rangeBands([0, width - margin.left - margin.right], padding);
+          var xScale = d3.scale.ordinal()
+            .domain(xDomain ? xDomain.call(this) : data.map(function(d) {
+              return d[0];
+            }))
+            .rangeBands([0, width - margin.left - margin.right], padding);
 
-      var yScale = d3.scale.linear()
-          .domain(yDomain ? yDomain.call(this) : [0, d3.max(data, function(d){ return 1.1*(d[1]); })])
-          .range([height - margin.top - margin.bottom, 0]);
+          var yScale = d3.scale.linear()
+            .domain(yDomain ? yDomain.call(this) : [0, d3.max(data, function(d) {
+              return 1.1 * (d[1]);
+            })])
+            .range([height - margin.top - margin.bottom, 0]);
 
-      var xAxis = d3.svg.axis()
-          .scale(xScale)
-          .orient("bottom")
-          .tickSize(6, 0);
+          var xAxis = d3.svg.axis()
+            .scale(xScale)
+            .orient("bottom")
+            .tickSize(6, 0);
 
-      var yAxis = d3.svg.axis()
-          .scale(yScale)
-          .orient("left")
-          .tickSize(-width - margin.left - margin.right)
-          .tickFormat(tickFormat ? tickFormat : null);
+          var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .orient("left")
+            .tickSize(-width - margin.left - margin.right)
+            .tickFormat(tickFormat ? tickFormat : null);
 
-      var svg = d3.select(this).selectAll("svg").data([datum]);
+          var svg = d3.select(this).selectAll("svg").data([datum]);
 
-      var g = svg.enter().append("svg")
-          .attr("width", width)
-          .attr("height", height*1.1)
-          .style("padding", "3px")
-        .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          var g = svg.enter().append("svg")
+            .attr("width", width)
+            .attr("height", height * 1.1)
+            .style("padding", "3px")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      g.append("g").attr("class", "bars");
-      g.append("g").attr("class", "x axis");
-      g.append("g").attr("class", "y axis");
+          g.append("g").attr("class", "bars");
+          g.append("g").attr("class", "x axis");
+          g.append("g").attr("class", "y axis");
 
-      g = svg.select("g");
+          g = svg.select("g");
 
-      var bar = g.select(".bars").selectAll(".bar")
-          .data(data);
+          var bar = g.select(".bars").selectAll(".bar")
+            .data(data);
 
-      bar.exit().transition()
-          .duration(duration)
-          .attr("y", height - margin.top - margin.bottom)
-          .attr("height", 0)
-          .remove();
+          bar.exit().transition()
+            .duration(duration)
+            .attr("y", height - margin.top - margin.bottom)
+            .attr("height", 0)
+            .remove();
 
-      bar.enter().append("rect")
-          .attr("class", "bar")
-          .attr("x", function(d){ return xScale(d[0]); })
-          .attr("y", height - margin.top - margin.bottom)
-          .attr("width", xScale.rangeBand())
-          .attr("height", 0)
-        .transition()
-          .delay(duration)
-          .duration(duration)
-          .attr("y", function(d){ return yScale(d[1]); })
-          .attr("height", function(d){ return height - margin.top - margin.bottom - yScale(d[1]); });
-
-      bar.transition()
-          .delay(duration)
-          .duration(duration)
-          .text(function(d){ return d3.round(yScale(d[1]),1); })
-          .attr("y", function(d){ return yScale(d[1]); })
-          .attr("height", function(d){ return height - margin.top - margin.bottom - yScale(d[1]); });
-
-      g.select(".x.axis")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + yScale.range()[0] + ")")
-        .transition()
-          .call(xAxis)
-          .selectAll("text")
-          	.style("text-anchor", "end")
-          	.attr("dx", "-0.5em")
-          	.attr("dy", "0.1em")
-          	.attr("transform", function(d) {
-          	return "rotate(-45)"
+          bar.enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", function(d) {
+              return xScale(d[0]);
+            })
+            .attr("y", height - margin.top - margin.bottom)
+            .attr("width", xScale.rangeBand())
+            .attr("height", 0)
+            .transition()
+            .delay(delay)
+            .duration(duration)
+            .attr("y", function(d) {
+              return yScale(d[1]);
+            })
+            .attr("height", function(d) {
+              return height - margin.top - margin.bottom - yScale(d[1]);
             });
 
-      g.select(".y.axis")
-          .attr("class", "y axis")
-        .transition()
-          .delay(duration)
-          .call(yAxis);
+          bar.transition()
+            .delay(duration)
+            .duration(duration)
+            .text(function(d) {
+              return d3.round(yScale(d[1]), 1);
+            })
+            .attr("y", function(d) {
+              return yScale(d[1]);
+            })
+            .attr("height", function(d) {
+              return height - margin.top - margin.bottom - yScale(d[1]);
+            });
 
-      svg.selectAll("g")
-          .classed("g-baseline", function(d) { return d == 0 });
+          g.select(".x.axis")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + yScale.range()[0] + ")")
+            .transition()
+            .call(xAxis)
+            .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-0.5em")
+            .attr("dy", "0.1em")
+            .attr("transform", function(d) {
+              return "rotate(-45)"
+            });
+
+          g.select(".y.axis")
+            .attr("class", "y axis")
+            .transition()
+            .delay(delay)
+            .call(yAxis);
+
+          svg.selectAll("g")
+            .classed("g-baseline", function(d) {
+              return d == 0
+            });
+
+        });
+      }
+
+      barchart.margin = function(_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return barchart;
+      };
+
+      barchart.width = function(_) {
+        if (!arguments.length) return width;
+        width = _;
+        return barchart;
+      };
+
+      barchart.height = function(_) {
+        if (!arguments.length) return height;
+        height = _;
+        return barchart;
+      };
+
+      barchart.padding = function(_) {
+        if (!arguments.length) return padding;
+        padding = _;
+        return barchart;
+      };
+
+      barchart.duration = function(_) {
+        if (!arguments.length) return duration;
+        duration = _;
+        return barchart;
+      };
+
+      barchart.tickFormat = function(_) {
+        if (!arguments.length) return tickFormat;
+        tickFormat = _;
+        return barchart;
+      };
+
+      barchart.x = function(_) {
+        if (!arguments.length) return xValue;
+        xValue = _;
+        return barchart;
+      };
+
+      barchart.y = function(_) {
+        if (!arguments.length) return yValue;
+        yValue = _;
+        return barchart;
+      };
+
+      barchart.xDomain = function(_) {
+        if (!arguments.length) return xDomain ? xDomain.call(this) : xDomain;
+        xDomain = d3.functor(_);
+        return barchart;
+      };
+
+      barchart.yDomain = function(_) {
+        if (!arguments.length) return yDomain ? yDomain.call(this) : yDomain;
+        yDomain = d3.functor(_);
+        return barchart;
+      };
+
+      return barchart;
+    }
+
+    d3.csv("data.csv", function(error, data) {
+
+
+      function setdata() {
+        data = [{
+            "country": "Australia",
+            "variable": "CO2 emissions",
+            "value": "17.77324852"
+          },
+          {
+            "country": "Austria",
+            "variable": "CO2 emissions",
+            "value": "8.147571324"
+          },
+          {
+            "country": "Belgium",
+            "variable": "CO2 emissions",
+            "value": "9.829159629"
+          },
+          {
+            "country": "Canada",
+            "variable": "CO2 emissions",
+            "value": "15.36481578"
+          },
+          {
+            "country": "Denmark",
+            "variable": "CO2 emissions",
+            "value": "7.482175978"
+          },
+          {
+            "country": "Finland",
+            "variable": "CO2 emissions",
+            "value": "10.32056288"
+          },
+          {
+            "country": "France",
+            "variable": "CO2 emissions",
+            "value": "5.190746618"
+          },
+          {
+            "country": "Germany",
+            "variable": "CO2 emissions",
+            "value": "9.139380131"
+          },
+          {
+            "country": "Greece",
+            "variable": "CO2 emissions",
+            "value": "7.519412112"
+          },
+          {
+            "country": "Iceland",
+            "variable": "CO2 emissions",
+            "value": "5.799127623"
+          },
+          {
+            "country": "Ireland",
+            "variable": "CO2 emissions",
+            "value": "7.631979941"
+          },
+          {
+            "country": "Italy",
+            "variable": "CO2 emissions",
+            "value": "6.54837368"
+          },
+          {
+            "country": "Japan",
+            "variable": "CO2 emissions",
+            "value": "9.280510802"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "CO2 emissions",
+            "value": "20.12169478"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "CO2 emissions",
+            "value": "10.45164251"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "CO2 emissions",
+            "value": "6.880817253"
+          },
+          {
+            "country": "Norway",
+            "variable": "CO2 emissions",
+            "value": "7.692307692"
+          },
+          {
+            "country": "Portugal",
+            "variable": "CO2 emissions",
+            "value": "4.554082572"
+          },
+          {
+            "country": "Spain",
+            "variable": "CO2 emissions",
+            "value": "5.854300849"
+          },
+          {
+            "country": "Sweden",
+            "variable": "CO2 emissions",
+            "value": "4.751718979"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "CO2 emissions",
+            "value": "5.037663677"
+          },
+          {
+            "country": "Turkey",
+            "variable": "CO2 emissions",
+            "value": "3.849563484"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "CO2 emissions",
+            "value": "7.000225962"
+          },
+          {
+            "country": "United States",
+            "variable": "CO2 emissions",
+            "value": "16.96850775"
+          },
+          {
+            "country": "Australia",
+            "variable": "Education",
+            "value": "44.61"
+          },
+          {
+            "country": "Austria",
+            "variable": "Education",
+            "value": "21.16"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Education",
+            "value": "42.45"
+          },
+          {
+            "country": "Canada",
+            "variable": "Education",
+            "value": "56.7"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Education",
+            "value": "38.58"
+          },
+          {
+            "country": "Finland",
+            "variable": "Education",
+            "value": "39.37"
+          },
+          {
+            "country": "France",
+            "variable": "Education",
+            "value": "43.01"
+          },
+          {
+            "country": "Germany",
+            "variable": "Education",
+            "value": "27.67"
+          },
+          {
+            "country": "Greece",
+            "variable": "Education",
+            "value": "32.52"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Education",
+            "value": "39.37"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Education",
+            "value": "47.19"
+          },
+          {
+            "country": "Italy",
+            "variable": "Education",
+            "value": "20.98"
+          },
+          {
+            "country": "Japan",
+            "variable": "Education",
+            "value": "58.7"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Education",
+            "value": "46.64"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Education",
+            "value": "39.9"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Education",
+            "value": "46.04"
+          },
+          {
+            "country": "Norway",
+            "variable": "Education",
+            "value": "46.8"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Education",
+            "value": "26.92"
+          },
+          {
+            "country": "Spain",
+            "variable": "Education",
+            "value": "39.15"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Education",
+            "value": "42.86"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Education",
+            "value": "39.8"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Education",
+            "value": "18.87"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Education",
+            "value": "46.91"
+          },
+          {
+            "country": "United States",
+            "variable": "Education",
+            "value": "43.13"
+          },
+          {
+            "country": "Australia",
+            "variable": "Employment to population ratio",
+            "value": "72.3"
+          },
+          {
+            "country": "Austria",
+            "variable": "Employment to population ratio",
+            "value": "72.5"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Employment to population ratio",
+            "value": "61.8"
+          },
+          {
+            "country": "Canada",
+            "variable": "Employment to population ratio",
+            "value": "72.2"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Employment to population ratio",
+            "value": "72.6"
+          },
+          {
+            "country": "Finland",
+            "variable": "Employment to population ratio",
+            "value": "69.5"
+          },
+          {
+            "country": "France",
+            "variable": "Employment to population ratio",
+            "value": "63.9"
+          },
+          {
+            "country": "Germany",
+            "variable": "Employment to population ratio",
+            "value": "72.8"
+          },
+          {
+            "country": "Greece",
+            "variable": "Employment to population ratio",
+            "value": "51.3"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Employment to population ratio",
+            "value": "80.2"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Employment to population ratio",
+            "value": "58.8"
+          },
+          {
+            "country": "Italy",
+            "variable": "Employment to population ratio",
+            "value": "57.6"
+          },
+          {
+            "country": "Japan",
+            "variable": "Employment to population ratio",
+            "value": "70.6"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Employment to population ratio",
+            "value": "65.8"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Employment to population ratio",
+            "value": "75.1"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Employment to population ratio",
+            "value": "72.1"
+          },
+          {
+            "country": "Norway",
+            "variable": "Employment to population ratio",
+            "value": "75.8"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Employment to population ratio",
+            "value": "61.8"
+          },
+          {
+            "country": "Spain",
+            "variable": "Employment to population ratio",
+            "value": "56.2"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Employment to population ratio",
+            "value": "73.8"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Employment to population ratio",
+            "value": "79.4"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Employment to population ratio",
+            "value": "48.9"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Employment to population ratio",
+            "value": "70.9"
+          },
+          {
+            "country": "United States",
+            "variable": "Employment to population ratio",
+            "value": "67.1"
+          },
+          {
+            "country": "Australia",
+            "variable": "GDP per capita",
+            "value": "44407.02"
+          },
+          {
+            "country": "Austria",
+            "variable": "GDP per capita",
+            "value": "44141.3"
+          },
+          {
+            "country": "Belgium",
+            "variable": "GDP per capita",
+            "value": "40838.06"
+          },
+          {
+            "country": "Canada",
+            "variable": "GDP per capita",
+            "value": "42114.49"
+          },
+          {
+            "country": "Denmark",
+            "variable": "GDP per capita",
+            "value": "42787.23"
+          },
+          {
+            "country": "Finland",
+            "variable": "GDP per capita",
+            "value": "39130.04"
+          },
+          {
+            "country": "France",
+            "variable": "GDP per capita",
+            "value": "36932.83"
+          },
+          {
+            "country": "Germany",
+            "variable": "GDP per capita",
+            "value": "42682.16"
+          },
+          {
+            "country": "Greece",
+            "variable": "GDP per capita",
+            "value": "25585.7"
+          },
+          {
+            "country": "Iceland",
+            "variable": "GDP per capita",
+            "value": "39096.54"
+          },
+          {
+            "country": "Ireland",
+            "variable": "GDP per capita",
+            "value": "43802.59"
+          },
+          {
+            "country": "Italy",
+            "variable": "GDP per capita",
+            "value": "34140.73"
+          },
+          {
+            "country": "Japan",
+            "variable": "GDP per capita",
+            "value": "35481.64"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "GDP per capita",
+            "value": "89417.04"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "GDP per capita",
+            "value": "43347.62"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "GDP per capita",
+            "value": "32847.38"
+          },
+          {
+            "country": "Norway",
+            "variable": "GDP per capita",
+            "value": "66135.07"
+          },
+          {
+            "country": "Portugal",
+            "variable": "GDP per capita",
+            "value": "25801.55"
+          },
+          {
+            "country": "Spain",
+            "variable": "GDP per capita",
+            "value": "32550.74"
+          },
+          {
+            "country": "Sweden",
+            "variable": "GDP per capita",
+            "value": "42874.26"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "GDP per capita",
+            "value": "53641.07"
+          },
+          {
+            "country": "Turkey",
+            "variable": "GDP per capita",
+            "value": "18314.72"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "GDP per capita",
+            "value": "35670.57"
+          },
+          {
+            "country": "United States",
+            "variable": "GDP per capita",
+            "value": "51688.63"
+          },
+          {
+            "country": "Australia",
+            "variable": "Health expenditures",
+            "value": "8.9"
+          },
+          {
+            "country": "Austria",
+            "variable": "Health expenditures",
+            "value": "10.8"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Health expenditures",
+            "value": "10.5"
+          },
+          {
+            "country": "Canada",
+            "variable": "Health expenditures",
+            "value": "11.2"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Health expenditures",
+            "value": "10.9"
+          },
+          {
+            "country": "Finland",
+            "variable": "Health expenditures",
+            "value": "9.1"
+          },
+          {
+            "country": "France",
+            "variable": "Health expenditures",
+            "value": "11.6"
+          },
+          {
+            "country": "Germany",
+            "variable": "Health expenditures",
+            "value": "11.3"
+          },
+          {
+            "country": "Greece",
+            "variable": "Health expenditures",
+            "value": "9.1"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Health expenditures",
+            "value": "8.9"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Health expenditures",
+            "value": "8.9"
+          },
+          {
+            "country": "Italy",
+            "variable": "Health expenditures",
+            "value": "9.2"
+          },
+          {
+            "country": "Japan",
+            "variable": "Health expenditures",
+            "value": "9.6"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Health expenditures",
+            "value": "6.6"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Health expenditures",
+            "value": "11.9"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Health expenditures",
+            "value": "10.3"
+          },
+          {
+            "country": "Norway",
+            "variable": "Health expenditures",
+            "value": "9.4"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Health expenditures",
+            "value": "10.2"
+          },
+          {
+            "country": "Spain",
+            "variable": "Health expenditures",
+            "value": "9.3"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Health expenditures",
+            "value": "9.5"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Health expenditures",
+            "value": "11.3"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Health expenditures",
+            "value": "6.1"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Health expenditures",
+            "value": "9.4"
+          },
+          {
+            "country": "United States",
+            "variable": "Health expenditures",
+            "value": "17.7"
+          },
+          {
+            "country": "Australia",
+            "variable": "Income inequality",
+            "value": "33.4"
+          },
+          {
+            "country": "Austria",
+            "variable": "Income inequality",
+            "value": "26.7"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Income inequality",
+            "value": "26.2"
+          },
+          {
+            "country": "Canada",
+            "variable": "Income inequality",
+            "value": "32"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Income inequality",
+            "value": "25.2"
+          },
+          {
+            "country": "Finland",
+            "variable": "Income inequality",
+            "value": "26"
+          },
+          {
+            "country": "France",
+            "variable": "Income inequality",
+            "value": "30.3"
+          },
+          {
+            "country": "Germany",
+            "variable": "Income inequality",
+            "value": "28.6"
+          },
+          {
+            "country": "Greece",
+            "variable": "Income inequality",
+            "value": "33.7"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Income inequality",
+            "value": "24.4"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Income inequality",
+            "value": "33.1"
+          },
+          {
+            "country": "Italy",
+            "variable": "Income inequality",
+            "value": "31.9"
+          },
+          {
+            "country": "Japan",
+            "variable": "Income inequality",
+            "value": "33.6"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Income inequality",
+            "value": "27"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Income inequality",
+            "value": "28.8"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Income inequality",
+            "value": "31.7"
+          },
+          {
+            "country": "Norway",
+            "variable": "Income inequality",
+            "value": "24.9"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Income inequality",
+            "value": "34.4"
+          },
+          {
+            "country": "Spain",
+            "variable": "Income inequality",
+            "value": "33.8"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Income inequality",
+            "value": "26.9"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Income inequality",
+            "value": "29.8"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Income inequality",
+            "value": "41.1"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Income inequality",
+            "value": "34.1"
+          },
+          {
+            "country": "United States",
+            "variable": "Income inequality",
+            "value": "38"
+          },
+          {
+            "country": "Australia",
+            "variable": "Infant mortality",
+            "value": "3.8"
+          },
+          {
+            "country": "Austria",
+            "variable": "Infant mortality",
+            "value": "3.6"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Infant mortality",
+            "value": "3.3"
+          },
+          {
+            "country": "Canada",
+            "variable": "Infant mortality",
+            "value": "4.9"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Infant mortality",
+            "value": "3.6"
+          },
+          {
+            "country": "Finland",
+            "variable": "Infant mortality",
+            "value": "2.4"
+          },
+          {
+            "country": "France",
+            "variable": "Infant mortality",
+            "value": "3.5"
+          },
+          {
+            "country": "Germany",
+            "variable": "Infant mortality",
+            "value": "3.6"
+          },
+          {
+            "country": "Greece",
+            "variable": "Infant mortality",
+            "value": "3.4"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Infant mortality",
+            "value": "0.9"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Infant mortality",
+            "value": "3.5"
+          },
+          {
+            "country": "Italy",
+            "variable": "Infant mortality",
+            "value": "3.4"
+          },
+          {
+            "country": "Japan",
+            "variable": "Infant mortality",
+            "value": "2.3"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Infant mortality",
+            "value": "4.3"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Infant mortality",
+            "value": "3.6"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Infant mortality",
+            "value": "5.5"
+          },
+          {
+            "country": "Norway",
+            "variable": "Infant mortality",
+            "value": "2.8"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Infant mortality",
+            "value": "3.1"
+          },
+          {
+            "country": "Spain",
+            "variable": "Infant mortality",
+            "value": "3.2"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Infant mortality",
+            "value": "2.1"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Infant mortality",
+            "value": "3.8"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Infant mortality",
+            "value": "7.7"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Infant mortality",
+            "value": "4.3"
+          },
+          {
+            "country": "United States",
+            "variable": "Infant mortality",
+            "value": "6.1"
+          },
+          {
+            "country": "Australia",
+            "variable": "Poverty rate",
+            "value": "14.5"
+          },
+          {
+            "country": "Austria",
+            "variable": "Poverty rate",
+            "value": "8.1"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Poverty rate",
+            "value": "9.7"
+          },
+          {
+            "country": "Canada",
+            "variable": "Poverty rate",
+            "value": "11.9"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Poverty rate",
+            "value": "6"
+          },
+          {
+            "country": "Finland",
+            "variable": "Poverty rate",
+            "value": "7.3"
+          },
+          {
+            "country": "France",
+            "variable": "Poverty rate",
+            "value": "7.9"
+          },
+          {
+            "country": "Germany",
+            "variable": "Poverty rate",
+            "value": "8.8"
+          },
+          {
+            "country": "Greece",
+            "variable": "Poverty rate",
+            "value": "14.3"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Poverty rate",
+            "value": "6.4"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Poverty rate",
+            "value": "9"
+          },
+          {
+            "country": "Italy",
+            "variable": "Poverty rate",
+            "value": "13"
+          },
+          {
+            "country": "Japan",
+            "variable": "Poverty rate",
+            "value": "16"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Poverty rate",
+            "value": "7.2"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Poverty rate",
+            "value": "7.5"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Poverty rate",
+            "value": "10.3"
+          },
+          {
+            "country": "Norway",
+            "variable": "Poverty rate",
+            "value": "7.5"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Poverty rate",
+            "value": "11.4"
+          },
+          {
+            "country": "Spain",
+            "variable": "Poverty rate",
+            "value": "15.4"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Poverty rate",
+            "value": "9.1"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Poverty rate",
+            "value": "9.5"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Poverty rate",
+            "value": "19.3"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Poverty rate",
+            "value": "9.9"
+          },
+          {
+            "country": "United States",
+            "variable": "Poverty rate",
+            "value": "17.4"
+          },
+          {
+            "country": "Australia",
+            "variable": "Public social spending",
+            "value": "19.518"
+          },
+          {
+            "country": "Austria",
+            "variable": "Public social spending",
+            "value": "28.293"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Public social spending",
+            "value": "30.728"
+          },
+          {
+            "country": "Canada",
+            "variable": "Public social spending",
+            "value": "18.155"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Public social spending",
+            "value": "30.786"
+          },
+          {
+            "country": "Finland",
+            "variable": "Public social spending",
+            "value": "30.534"
+          },
+          {
+            "country": "France",
+            "variable": "Public social spending",
+            "value": "33.021"
+          },
+          {
+            "country": "Germany",
+            "variable": "Public social spending",
+            "value": "26.183"
+          },
+          {
+            "country": "Greece",
+            "variable": "Public social spending",
+            "value": "21.995"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Public social spending",
+            "value": "17.219"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Public social spending",
+            "value": "21.592"
+          },
+          {
+            "country": "Italy",
+            "variable": "Public social spending",
+            "value": "28.44"
+          },
+          {
+            "country": "Japan",
+            "variable": "Public social spending",
+            "value": "22.296"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Public social spending",
+            "value": "23.379"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Public social spending",
+            "value": "24.299"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Public social spending",
+            "value": "22.371"
+          },
+          {
+            "country": "Norway",
+            "variable": "Public social spending",
+            "value": "22.88"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Public social spending",
+            "value": "26.383"
+          },
+          {
+            "country": "Spain",
+            "variable": "Public social spending",
+            "value": "27.428"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Public social spending",
+            "value": "28.643"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Public social spending",
+            "value": "19.097"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Public social spending",
+            "value": "12.8"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Public social spending",
+            "value": "23.773"
+          },
+          {
+            "country": "United States",
+            "variable": "Public social spending",
+            "value": "20.033"
+          },
+          {
+            "country": "Australia",
+            "variable": "Tax revenue",
+            "value": "26.507"
+          },
+          {
+            "country": "Austria",
+            "variable": "Tax revenue",
+            "value": "43.175"
+          },
+          {
+            "country": "Belgium",
+            "variable": "Tax revenue",
+            "value": "45.283"
+          },
+          {
+            "country": "Canada",
+            "variable": "Tax revenue",
+            "value": "30.738"
+          },
+          {
+            "country": "Denmark",
+            "variable": "Tax revenue",
+            "value": "47.957"
+          },
+          {
+            "country": "Finland",
+            "variable": "Tax revenue",
+            "value": "44.083"
+          },
+          {
+            "country": "France",
+            "variable": "Tax revenue",
+            "value": "45.285"
+          },
+          {
+            "country": "Germany",
+            "variable": "Tax revenue",
+            "value": "37.593"
+          },
+          {
+            "country": "Greece",
+            "variable": "Tax revenue",
+            "value": "33.755"
+          },
+          {
+            "country": "Iceland",
+            "variable": "Tax revenue",
+            "value": "37.188"
+          },
+          {
+            "country": "Ireland",
+            "variable": "Tax revenue",
+            "value": "28.283"
+          },
+          {
+            "country": "Italy",
+            "variable": "Tax revenue",
+            "value": "44.42"
+          },
+          {
+            "country": "Japan",
+            "variable": "Tax revenue",
+            "value": "28.627"
+          },
+          {
+            "country": "Luxembourg",
+            "variable": "Tax revenue",
+            "value": "37.756"
+          },
+          {
+            "country": "Netherlands",
+            "variable": "Tax revenue",
+            "value": "38.56"
+          },
+          {
+            "country": "New Zealand",
+            "variable": "Tax revenue",
+            "value": "32.879"
+          },
+          {
+            "country": "Norway",
+            "variable": "Tax revenue",
+            "value": "42.207"
+          },
+          {
+            "country": "Portugal",
+            "variable": "Tax revenue",
+            "value": "32.484"
+          },
+          {
+            "country": "Spain",
+            "variable": "Tax revenue",
+            "value": "32.866"
+          },
+          {
+            "country": "Sweden",
+            "variable": "Tax revenue",
+            "value": "44.305"
+          },
+          {
+            "country": "Switzerland",
+            "variable": "Tax revenue",
+            "value": "28.173"
+          },
+          {
+            "country": "Turkey",
+            "variable": "Tax revenue",
+            "value": "27.659"
+          },
+          {
+            "country": "United Kingdom",
+            "variable": "Tax revenue",
+            "value": "35.245"
+          },
+          {
+            "country": "United States",
+            "variable": "Tax revenue",
+            "value": "24.347"
+          }
+        ]
+      }
+      setdata();
+
+      data = d3.nest()
+        .key(function(d) {
+          return d.variable;
+        })
+        .entries(data);
+      data.forEach(function(d) {
+        d.value = +d.value;
+        d.values.sort(function(a, b) {
+          return d3.ascending(+a.value, +b.value);
+        });
+        map.set(d.key, d.values);
+
+      });
+      barchart = d3.svg.barchart()
+        .margin({
+          top: 0,
+          right: 10,
+          bottom: 40,
+          left: 40
+        })
+        .tickFormat(d3.format(",.0f"))
+        .x(function(d) {
+          return d.country;
+        })
+        .y(function(d) {
+          return d.value;
+        });
+
+      d3.select("#chart")
+        .datum(map.get("CO2 emissions"))
+        .call(barchart);
 
     });
-  }
-
-  barchart.margin = function(_) {
-    if (!arguments.length) return margin;
-    margin = _;
-    return barchart;
-  };
-
-  barchart.width = function(_) {
-    if (!arguments.length) return width;
-    width = _;
-    return barchart;
-  };
-
-  barchart.height = function(_) {
-    if (!arguments.length) return height;
-    height = _;
-    return barchart;
-  };
-
-  barchart.padding = function(_) {
-    if (!arguments.length) return padding;
-    padding = _;
-    return barchart;
-  };
-
-  barchart.duration = function(_) {
-    if (!arguments.length) return duration;
-    duration = _;
-    return barchart;
-  };
-
-  barchart.tickFormat = function(_) {
-    if (!arguments.length) return tickFormat;
-    tickFormat = _;
-    return barchart;
-  };
-
-  barchart.x = function(_) {
-    if (!arguments.length) return xValue;
-    xValue = _;
-    return barchart;
-  };
-
-  barchart.y = function(_) {
-    if (!arguments.length) return yValue;
-    yValue = _;
-    return barchart;
-  };
-
-  barchart.xDomain = function(_) {
-    if (!arguments.length) return xDomain ? xDomain.call(this) : xDomain;
-    xDomain = d3.functor(_);
-    return barchart;
-  };
-
-  barchart.yDomain = function(_) {
-    if (!arguments.length) return yDomain ? yDomain.call(this) : yDomain;
-    yDomain = d3.functor(_);
-    return barchart;
-  };
-
-  return barchart;
-}
-
-d3.csv("data.csv", function(error, data) {
 
 
-function setdata(){
-data = [
-    {
-        "country": "Australia",
-        "variable": "CO2 emissions",
-        "value": "17.77324852"
-    },
-    {
-        "country": "Austria",
-        "variable": "CO2 emissions",
-        "value": "8.147571324"
-    },
-    {
-        "country": "Belgium",
-        "variable": "CO2 emissions",
-        "value": "9.829159629"
-    },
-    {
-        "country": "Canada",
-        "variable": "CO2 emissions",
-        "value": "15.36481578"
-    },
-    {
-        "country": "Denmark",
-        "variable": "CO2 emissions",
-        "value": "7.482175978"
-    },
-    {
-        "country": "Finland",
-        "variable": "CO2 emissions",
-        "value": "10.32056288"
-    },
-    {
-        "country": "France",
-        "variable": "CO2 emissions",
-        "value": "5.190746618"
-    },
-    {
-        "country": "Germany",
-        "variable": "CO2 emissions",
-        "value": "9.139380131"
-    },
-    {
-        "country": "Greece",
-        "variable": "CO2 emissions",
-        "value": "7.519412112"
-    },
-    {
-        "country": "Iceland",
-        "variable": "CO2 emissions",
-        "value": "5.799127623"
-    },
-    {
-        "country": "Ireland",
-        "variable": "CO2 emissions",
-        "value": "7.631979941"
-    },
-    {
-        "country": "Italy",
-        "variable": "CO2 emissions",
-        "value": "6.54837368"
-    },
-    {
-        "country": "Japan",
-        "variable": "CO2 emissions",
-        "value": "9.280510802"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "CO2 emissions",
-        "value": "20.12169478"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "CO2 emissions",
-        "value": "10.45164251"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "CO2 emissions",
-        "value": "6.880817253"
-    },
-    {
-        "country": "Norway",
-        "variable": "CO2 emissions",
-        "value": "7.692307692"
-    },
-    {
-        "country": "Portugal",
-        "variable": "CO2 emissions",
-        "value": "4.554082572"
-    },
-    {
-        "country": "Spain",
-        "variable": "CO2 emissions",
-        "value": "5.854300849"
-    },
-    {
-        "country": "Sweden",
-        "variable": "CO2 emissions",
-        "value": "4.751718979"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "CO2 emissions",
-        "value": "5.037663677"
-    },
-    {
-        "country": "Turkey",
-        "variable": "CO2 emissions",
-        "value": "3.849563484"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "CO2 emissions",
-        "value": "7.000225962"
-    },
-    {
-        "country": "United States",
-        "variable": "CO2 emissions",
-        "value": "16.96850775"
-    },
-    {
-        "country": "Australia",
-        "variable": "Education",
-        "value": "44.61"
-    },
-    {
-        "country": "Austria",
-        "variable": "Education",
-        "value": "21.16"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Education",
-        "value": "42.45"
-    },
-    {
-        "country": "Canada",
-        "variable": "Education",
-        "value": "56.7"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Education",
-        "value": "38.58"
-    },
-    {
-        "country": "Finland",
-        "variable": "Education",
-        "value": "39.37"
-    },
-    {
-        "country": "France",
-        "variable": "Education",
-        "value": "43.01"
-    },
-    {
-        "country": "Germany",
-        "variable": "Education",
-        "value": "27.67"
-    },
-    {
-        "country": "Greece",
-        "variable": "Education",
-        "value": "32.52"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Education",
-        "value": "39.37"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Education",
-        "value": "47.19"
-    },
-    {
-        "country": "Italy",
-        "variable": "Education",
-        "value": "20.98"
-    },
-    {
-        "country": "Japan",
-        "variable": "Education",
-        "value": "58.7"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Education",
-        "value": "46.64"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Education",
-        "value": "39.9"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Education",
-        "value": "46.04"
-    },
-    {
-        "country": "Norway",
-        "variable": "Education",
-        "value": "46.8"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Education",
-        "value": "26.92"
-    },
-    {
-        "country": "Spain",
-        "variable": "Education",
-        "value": "39.15"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Education",
-        "value": "42.86"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Education",
-        "value": "39.8"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Education",
-        "value": "18.87"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Education",
-        "value": "46.91"
-    },
-    {
-        "country": "United States",
-        "variable": "Education",
-        "value": "43.13"
-    },
-    {
-        "country": "Australia",
-        "variable": "Employment to population ratio",
-        "value": "72.3"
-    },
-    {
-        "country": "Austria",
-        "variable": "Employment to population ratio",
-        "value": "72.5"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Employment to population ratio",
-        "value": "61.8"
-    },
-    {
-        "country": "Canada",
-        "variable": "Employment to population ratio",
-        "value": "72.2"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Employment to population ratio",
-        "value": "72.6"
-    },
-    {
-        "country": "Finland",
-        "variable": "Employment to population ratio",
-        "value": "69.5"
-    },
-    {
-        "country": "France",
-        "variable": "Employment to population ratio",
-        "value": "63.9"
-    },
-    {
-        "country": "Germany",
-        "variable": "Employment to population ratio",
-        "value": "72.8"
-    },
-    {
-        "country": "Greece",
-        "variable": "Employment to population ratio",
-        "value": "51.3"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Employment to population ratio",
-        "value": "80.2"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Employment to population ratio",
-        "value": "58.8"
-    },
-    {
-        "country": "Italy",
-        "variable": "Employment to population ratio",
-        "value": "57.6"
-    },
-    {
-        "country": "Japan",
-        "variable": "Employment to population ratio",
-        "value": "70.6"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Employment to population ratio",
-        "value": "65.8"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Employment to population ratio",
-        "value": "75.1"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Employment to population ratio",
-        "value": "72.1"
-    },
-    {
-        "country": "Norway",
-        "variable": "Employment to population ratio",
-        "value": "75.8"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Employment to population ratio",
-        "value": "61.8"
-    },
-    {
-        "country": "Spain",
-        "variable": "Employment to population ratio",
-        "value": "56.2"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Employment to population ratio",
-        "value": "73.8"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Employment to population ratio",
-        "value": "79.4"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Employment to population ratio",
-        "value": "48.9"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Employment to population ratio",
-        "value": "70.9"
-    },
-    {
-        "country": "United States",
-        "variable": "Employment to population ratio",
-        "value": "67.1"
-    },
-    {
-        "country": "Australia",
-        "variable": "GDP per capita",
-        "value": "44407.02"
-    },
-    {
-        "country": "Austria",
-        "variable": "GDP per capita",
-        "value": "44141.3"
-    },
-    {
-        "country": "Belgium",
-        "variable": "GDP per capita",
-        "value": "40838.06"
-    },
-    {
-        "country": "Canada",
-        "variable": "GDP per capita",
-        "value": "42114.49"
-    },
-    {
-        "country": "Denmark",
-        "variable": "GDP per capita",
-        "value": "42787.23"
-    },
-    {
-        "country": "Finland",
-        "variable": "GDP per capita",
-        "value": "39130.04"
-    },
-    {
-        "country": "France",
-        "variable": "GDP per capita",
-        "value": "36932.83"
-    },
-    {
-        "country": "Germany",
-        "variable": "GDP per capita",
-        "value": "42682.16"
-    },
-    {
-        "country": "Greece",
-        "variable": "GDP per capita",
-        "value": "25585.7"
-    },
-    {
-        "country": "Iceland",
-        "variable": "GDP per capita",
-        "value": "39096.54"
-    },
-    {
-        "country": "Ireland",
-        "variable": "GDP per capita",
-        "value": "43802.59"
-    },
-    {
-        "country": "Italy",
-        "variable": "GDP per capita",
-        "value": "34140.73"
-    },
-    {
-        "country": "Japan",
-        "variable": "GDP per capita",
-        "value": "35481.64"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "GDP per capita",
-        "value": "89417.04"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "GDP per capita",
-        "value": "43347.62"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "GDP per capita",
-        "value": "32847.38"
-    },
-    {
-        "country": "Norway",
-        "variable": "GDP per capita",
-        "value": "66135.07"
-    },
-    {
-        "country": "Portugal",
-        "variable": "GDP per capita",
-        "value": "25801.55"
-    },
-    {
-        "country": "Spain",
-        "variable": "GDP per capita",
-        "value": "32550.74"
-    },
-    {
-        "country": "Sweden",
-        "variable": "GDP per capita",
-        "value": "42874.26"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "GDP per capita",
-        "value": "53641.07"
-    },
-    {
-        "country": "Turkey",
-        "variable": "GDP per capita",
-        "value": "18314.72"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "GDP per capita",
-        "value": "35670.57"
-    },
-    {
-        "country": "United States",
-        "variable": "GDP per capita",
-        "value": "51688.63"
-    },
-    {
-        "country": "Australia",
-        "variable": "Health expenditures",
-        "value": "8.9"
-    },
-    {
-        "country": "Austria",
-        "variable": "Health expenditures",
-        "value": "10.8"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Health expenditures",
-        "value": "10.5"
-    },
-    {
-        "country": "Canada",
-        "variable": "Health expenditures",
-        "value": "11.2"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Health expenditures",
-        "value": "10.9"
-    },
-    {
-        "country": "Finland",
-        "variable": "Health expenditures",
-        "value": "9.1"
-    },
-    {
-        "country": "France",
-        "variable": "Health expenditures",
-        "value": "11.6"
-    },
-    {
-        "country": "Germany",
-        "variable": "Health expenditures",
-        "value": "11.3"
-    },
-    {
-        "country": "Greece",
-        "variable": "Health expenditures",
-        "value": "9.1"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Health expenditures",
-        "value": "8.9"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Health expenditures",
-        "value": "8.9"
-    },
-    {
-        "country": "Italy",
-        "variable": "Health expenditures",
-        "value": "9.2"
-    },
-    {
-        "country": "Japan",
-        "variable": "Health expenditures",
-        "value": "9.6"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Health expenditures",
-        "value": "6.6"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Health expenditures",
-        "value": "11.9"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Health expenditures",
-        "value": "10.3"
-    },
-    {
-        "country": "Norway",
-        "variable": "Health expenditures",
-        "value": "9.4"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Health expenditures",
-        "value": "10.2"
-    },
-    {
-        "country": "Spain",
-        "variable": "Health expenditures",
-        "value": "9.3"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Health expenditures",
-        "value": "9.5"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Health expenditures",
-        "value": "11.3"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Health expenditures",
-        "value": "6.1"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Health expenditures",
-        "value": "9.4"
-    },
-    {
-        "country": "United States",
-        "variable": "Health expenditures",
-        "value": "17.7"
-    },
-    {
-        "country": "Australia",
-        "variable": "Income inequality",
-        "value": "33.4"
-    },
-    {
-        "country": "Austria",
-        "variable": "Income inequality",
-        "value": "26.7"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Income inequality",
-        "value": "26.2"
-    },
-    {
-        "country": "Canada",
-        "variable": "Income inequality",
-        "value": "32"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Income inequality",
-        "value": "25.2"
-    },
-    {
-        "country": "Finland",
-        "variable": "Income inequality",
-        "value": "26"
-    },
-    {
-        "country": "France",
-        "variable": "Income inequality",
-        "value": "30.3"
-    },
-    {
-        "country": "Germany",
-        "variable": "Income inequality",
-        "value": "28.6"
-    },
-    {
-        "country": "Greece",
-        "variable": "Income inequality",
-        "value": "33.7"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Income inequality",
-        "value": "24.4"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Income inequality",
-        "value": "33.1"
-    },
-    {
-        "country": "Italy",
-        "variable": "Income inequality",
-        "value": "31.9"
-    },
-    {
-        "country": "Japan",
-        "variable": "Income inequality",
-        "value": "33.6"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Income inequality",
-        "value": "27"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Income inequality",
-        "value": "28.8"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Income inequality",
-        "value": "31.7"
-    },
-    {
-        "country": "Norway",
-        "variable": "Income inequality",
-        "value": "24.9"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Income inequality",
-        "value": "34.4"
-    },
-    {
-        "country": "Spain",
-        "variable": "Income inequality",
-        "value": "33.8"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Income inequality",
-        "value": "26.9"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Income inequality",
-        "value": "29.8"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Income inequality",
-        "value": "41.1"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Income inequality",
-        "value": "34.1"
-    },
-    {
-        "country": "United States",
-        "variable": "Income inequality",
-        "value": "38"
-    },
-    {
-        "country": "Australia",
-        "variable": "Infant mortality",
-        "value": "3.8"
-    },
-    {
-        "country": "Austria",
-        "variable": "Infant mortality",
-        "value": "3.6"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Infant mortality",
-        "value": "3.3"
-    },
-    {
-        "country": "Canada",
-        "variable": "Infant mortality",
-        "value": "4.9"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Infant mortality",
-        "value": "3.6"
-    },
-    {
-        "country": "Finland",
-        "variable": "Infant mortality",
-        "value": "2.4"
-    },
-    {
-        "country": "France",
-        "variable": "Infant mortality",
-        "value": "3.5"
-    },
-    {
-        "country": "Germany",
-        "variable": "Infant mortality",
-        "value": "3.6"
-    },
-    {
-        "country": "Greece",
-        "variable": "Infant mortality",
-        "value": "3.4"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Infant mortality",
-        "value": "0.9"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Infant mortality",
-        "value": "3.5"
-    },
-    {
-        "country": "Italy",
-        "variable": "Infant mortality",
-        "value": "3.4"
-    },
-    {
-        "country": "Japan",
-        "variable": "Infant mortality",
-        "value": "2.3"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Infant mortality",
-        "value": "4.3"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Infant mortality",
-        "value": "3.6"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Infant mortality",
-        "value": "5.5"
-    },
-    {
-        "country": "Norway",
-        "variable": "Infant mortality",
-        "value": "2.8"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Infant mortality",
-        "value": "3.1"
-    },
-    {
-        "country": "Spain",
-        "variable": "Infant mortality",
-        "value": "3.2"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Infant mortality",
-        "value": "2.1"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Infant mortality",
-        "value": "3.8"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Infant mortality",
-        "value": "7.7"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Infant mortality",
-        "value": "4.3"
-    },
-    {
-        "country": "United States",
-        "variable": "Infant mortality",
-        "value": "6.1"
-    },
-    {
-        "country": "Australia",
-        "variable": "Poverty rate",
-        "value": "14.5"
-    },
-    {
-        "country": "Austria",
-        "variable": "Poverty rate",
-        "value": "8.1"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Poverty rate",
-        "value": "9.7"
-    },
-    {
-        "country": "Canada",
-        "variable": "Poverty rate",
-        "value": "11.9"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Poverty rate",
-        "value": "6"
-    },
-    {
-        "country": "Finland",
-        "variable": "Poverty rate",
-        "value": "7.3"
-    },
-    {
-        "country": "France",
-        "variable": "Poverty rate",
-        "value": "7.9"
-    },
-    {
-        "country": "Germany",
-        "variable": "Poverty rate",
-        "value": "8.8"
-    },
-    {
-        "country": "Greece",
-        "variable": "Poverty rate",
-        "value": "14.3"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Poverty rate",
-        "value": "6.4"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Poverty rate",
-        "value": "9"
-    },
-    {
-        "country": "Italy",
-        "variable": "Poverty rate",
-        "value": "13"
-    },
-    {
-        "country": "Japan",
-        "variable": "Poverty rate",
-        "value": "16"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Poverty rate",
-        "value": "7.2"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Poverty rate",
-        "value": "7.5"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Poverty rate",
-        "value": "10.3"
-    },
-    {
-        "country": "Norway",
-        "variable": "Poverty rate",
-        "value": "7.5"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Poverty rate",
-        "value": "11.4"
-    },
-    {
-        "country": "Spain",
-        "variable": "Poverty rate",
-        "value": "15.4"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Poverty rate",
-        "value": "9.1"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Poverty rate",
-        "value": "9.5"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Poverty rate",
-        "value": "19.3"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Poverty rate",
-        "value": "9.9"
-    },
-    {
-        "country": "United States",
-        "variable": "Poverty rate",
-        "value": "17.4"
-    },
-    {
-        "country": "Australia",
-        "variable": "Public social spending",
-        "value": "19.518"
-    },
-    {
-        "country": "Austria",
-        "variable": "Public social spending",
-        "value": "28.293"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Public social spending",
-        "value": "30.728"
-    },
-    {
-        "country": "Canada",
-        "variable": "Public social spending",
-        "value": "18.155"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Public social spending",
-        "value": "30.786"
-    },
-    {
-        "country": "Finland",
-        "variable": "Public social spending",
-        "value": "30.534"
-    },
-    {
-        "country": "France",
-        "variable": "Public social spending",
-        "value": "33.021"
-    },
-    {
-        "country": "Germany",
-        "variable": "Public social spending",
-        "value": "26.183"
-    },
-    {
-        "country": "Greece",
-        "variable": "Public social spending",
-        "value": "21.995"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Public social spending",
-        "value": "17.219"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Public social spending",
-        "value": "21.592"
-    },
-    {
-        "country": "Italy",
-        "variable": "Public social spending",
-        "value": "28.44"
-    },
-    {
-        "country": "Japan",
-        "variable": "Public social spending",
-        "value": "22.296"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Public social spending",
-        "value": "23.379"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Public social spending",
-        "value": "24.299"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Public social spending",
-        "value": "22.371"
-    },
-    {
-        "country": "Norway",
-        "variable": "Public social spending",
-        "value": "22.88"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Public social spending",
-        "value": "26.383"
-    },
-    {
-        "country": "Spain",
-        "variable": "Public social spending",
-        "value": "27.428"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Public social spending",
-        "value": "28.643"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Public social spending",
-        "value": "19.097"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Public social spending",
-        "value": "12.8"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Public social spending",
-        "value": "23.773"
-    },
-    {
-        "country": "United States",
-        "variable": "Public social spending",
-        "value": "20.033"
-    },
-    {
-        "country": "Australia",
-        "variable": "Tax revenue",
-        "value": "26.507"
-    },
-    {
-        "country": "Austria",
-        "variable": "Tax revenue",
-        "value": "43.175"
-    },
-    {
-        "country": "Belgium",
-        "variable": "Tax revenue",
-        "value": "45.283"
-    },
-    {
-        "country": "Canada",
-        "variable": "Tax revenue",
-        "value": "30.738"
-    },
-    {
-        "country": "Denmark",
-        "variable": "Tax revenue",
-        "value": "47.957"
-    },
-    {
-        "country": "Finland",
-        "variable": "Tax revenue",
-        "value": "44.083"
-    },
-    {
-        "country": "France",
-        "variable": "Tax revenue",
-        "value": "45.285"
-    },
-    {
-        "country": "Germany",
-        "variable": "Tax revenue",
-        "value": "37.593"
-    },
-    {
-        "country": "Greece",
-        "variable": "Tax revenue",
-        "value": "33.755"
-    },
-    {
-        "country": "Iceland",
-        "variable": "Tax revenue",
-        "value": "37.188"
-    },
-    {
-        "country": "Ireland",
-        "variable": "Tax revenue",
-        "value": "28.283"
-    },
-    {
-        "country": "Italy",
-        "variable": "Tax revenue",
-        "value": "44.42"
-    },
-    {
-        "country": "Japan",
-        "variable": "Tax revenue",
-        "value": "28.627"
-    },
-    {
-        "country": "Luxembourg",
-        "variable": "Tax revenue",
-        "value": "37.756"
-    },
-    {
-        "country": "Netherlands",
-        "variable": "Tax revenue",
-        "value": "38.56"
-    },
-    {
-        "country": "New Zealand",
-        "variable": "Tax revenue",
-        "value": "32.879"
-    },
-    {
-        "country": "Norway",
-        "variable": "Tax revenue",
-        "value": "42.207"
-    },
-    {
-        "country": "Portugal",
-        "variable": "Tax revenue",
-        "value": "32.484"
-    },
-    {
-        "country": "Spain",
-        "variable": "Tax revenue",
-        "value": "32.866"
-    },
-    {
-        "country": "Sweden",
-        "variable": "Tax revenue",
-        "value": "44.305"
-    },
-    {
-        "country": "Switzerland",
-        "variable": "Tax revenue",
-        "value": "28.173"
-    },
-    {
-        "country": "Turkey",
-        "variable": "Tax revenue",
-        "value": "27.659"
-    },
-    {
-        "country": "United Kingdom",
-        "variable": "Tax revenue",
-        "value": "35.245"
-    },
-    {
-        "country": "United States",
-        "variable": "Tax revenue",
-        "value": "24.347"
-    }
-]
-}
-setdata();
+    d3.select("#menu").on("change", function() {
 
-  data = d3.nest()
-      .key(function(d){ return d.variable; })
-      .entries(data);
-  data.forEach(function(d){
-    d.value = +d.value;
-    d.values.sort(function(a, b){ return d3.ascending(+a.value, +b.value); });
-    map.set(d.key, d.values);
+      d3.select("#chart")
+        .datum(map.get(this.value))
+        .call(barchart);
 
-  });
-  barchart = d3.svg.barchart()
-      .margin({top: 0, right: 10, bottom: 40, left: 40})
-      .tickFormat(d3.format(",.0f"))
-      .x(function(d){ return d.country; })
-      .y(function(d){ return d.value; });
+      var unit;
+      var selectedVariable = document.getElementById("menu").value;
+      switch (selectedVariable) {
+        case "CO2 emissions":
+          unit = "Metric tons of CO<sub>2</sub> per capita";
+          break;
+        case "Education":
+          unit = "Percent of 25&ndash;34 year-olds with a post-secondary degree";
+          break;
+        case "Employment to population ratio":
+          unit = "Percent of working age population (15&ndash;64)";
+          break;
+        case "GDP per capita":
+          unit = "$US PPP adjusted";
+          break;
+        case "Health expenditures":
+          unit = "Percent of GDP";
+          break;
+        case "Income inequality":
+          unit = "Gini coefficient (0 = perfect equality, 100 = perfect inequality)";
+          break;
+        case "Infant mortality":
+          unit = "Deaths per 1,000 live births";
+          break;
+        case "Poverty rate":
+          unit = "Percent of population earning less than 50% of median household income";
+          break;
+        case "Public social spending":
+          unit = "Percent of GDP";
+          break;
+        case "Tax revenue":
+          unit = "Percent of GDP";
+          break;
+      }
+      d3.select("#unit")
+        .html(unit);
 
-  d3.select("#chart")
-      .datum(map.get("CO2 emissions"))
-      .call(barchart);
+    });
 
-});
-
-
-d3.select("#menu").on("change", function() {
-
-  d3.select("#chart")
-      .datum(map.get(this.value))
-      .call(barchart);
-
-  var unit;
-  var selectedVariable = document.getElementById("menu").value;
-  switch (selectedVariable)
-    	{
-    	case "CO2 emissions": unit = "Metric tons of CO<sub>2</sub> per capita"; break;
-    	case "Education": unit = "Percent of 25&ndash;34 year-olds with a post-secondary degree"; break;
-    	case "Employment to population ratio": unit = "Percent of working age population (15&ndash;64)"; break;
-    	case "GDP per capita": unit = "$US PPP adjusted"; break;
-    	case "Health expenditures": unit = "Percent of GDP"; break;
-    	case "Income inequality": unit = "Gini coefficient (0 = perfect equality, 100 = perfect inequality)"; break;
-    	case "Infant mortality": unit = "Deaths per 1,000 live births"; break;
-    	case "Poverty rate": unit = "Percent of population earning less than 50% of median household income"; break;
-    	case "Public social spending": unit = "Percent of GDP"; break;
-    	case "Tax revenue": unit = "Percent of GDP"; break;
-    	}
-  d3.select("#unit")
-      .html(unit);
-
-});
-
-d3.select(self.frameElement).style("height", "560px");
-
-</script>
+    d3.select(self.frameElement).style("height", "560px");
+  </script>
 </body>
+
 </html>
