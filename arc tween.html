@@ -35,6 +35,7 @@ var foreground = g.append("path")
 
 // Every so often, start a transition to a new random angle. The attrTween
 // definition is encapsulated in a separate function (a closure) below.
+// similar with javascript  setinterval();
 d3.interval(function() {
   foreground.transition()
       .duration(750)
@@ -57,8 +58,8 @@ function arcTween(newAngle) {
     // single argument t and returns a number between the starting angle and the
     // ending angle. When t = 0, it returns d.endAngle; when t = 1, it returns
     // newAngle; and for 0 < t < 1 it returns an angle in-between.
+    //console.log(newAngle);
     var interpolate = d3.interpolate(d.endAngle, newAngle);
-
     // The return value of the attrTween is also a function: the function that
     // we want to run for each tick of the transition. Because we used
     // attrTween("d"), the return value of this last function will be set to the
@@ -67,7 +68,6 @@ function arcTween(newAngle) {
     // attributes from a single function.) The argument t ranges from 0, at the
     // start of the transition, to 1, at the end.
     return function(t) {
-
       // Calculate the current arc angle based on the transition time, t. Since
       // the t for the transition and the t for the interpolate both range from
       // 0 to 1, we can pass t directly to the interpolator.
