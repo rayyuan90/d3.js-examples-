@@ -58,7 +58,9 @@ function RadarChart(id, data, options) {
 	//Append a g element
 	var g = svg.append("g")
 			.attr("transform", "translate(" + (cfg.w/2 + cfg.margin.left) + "," + (cfg.h/2 + cfg.margin.top) + ")");
-
+  // add color
+			var color = d3.scale.ordinal()
+			    .range(["#dbca4e", "#dbc73b", "#dbc529", "#dbc213", "#f9da02"]);
 	/////////////////////////////////////////////////////////
 	////////// Glow filter for some extra pizzazz ///////////
 	/////////////////////////////////////////////////////////
@@ -84,7 +86,7 @@ function RadarChart(id, data, options) {
 		.append("circle")
 		.attr("class", "gridCircle")
 		.attr("r", function(d, i){return radius/cfg.levels*d;})
-		.style("fill", "#CDCDCD")
+		.style("fill", function(d) {console.log(d); return color(d); })
 		.style("stroke", "#CDCDCD")
 		.style("fill-opacity", cfg.opacityCircles)
 		.style("filter" , "url(#glow)");
