@@ -102,7 +102,6 @@ function RadarChart(id, data, options) {
       return radius / cfg.levels * d;
     })
     .style("fill", function(d) {
-      console.log(d);
       return color(d);
     })
     .style("stroke", "#CDCDCD")
@@ -260,8 +259,35 @@ function RadarChart(id, data, options) {
     .enter().append("g")
     .attr("class", "radarCircleWrapper");
 
+    blobCircleWrapper.selectAll(".tooltip")
+       .data(function(d, i) {
+         return d;
+       })
+       .enter()
+       .append("text")
+    .attr("class", "tooltip")
+    // .attr("cx", function(d, i) {
+    //   return rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2);
+    // })
+    // .attr("cy", function(d, i) {
+    //   return rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2);
+    // })
+    .attr('x', function(d, i) {
+          // console.log(this.parentNode);
+      return parseFloat(
+        rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2) - 10)
+    })
+    .attr('y',  function(d, i) {
+      return parseFloat(
+        rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2) - 10)
+    })
+    .text(function(d, i) {
+      return Format(d.value)
+    })
+    .transition().duration(200)
+    .style('opacity', 1);
   //Append a set of invisible circles on top for the mouseover pop-up
-  blobCircleWrapper.selectAll(".radarInvisibleCircle")
+ blobCircleWrapper.selectAll(".radarInvisibleCircle")
     .data(function(d, i) {
       return d;
     })
@@ -275,22 +301,23 @@ function RadarChart(id, data, options) {
       return rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2);
     })
     .style("fill", "none")
-    .style("pointer-events", "all")
-    .on("mouseover", function(d, i) {
-      newX = parseFloat(d3.select(this).attr('cx')) - 10;
-      newY = parseFloat(d3.select(this).attr('cy')) - 10;
+    .style("pointer-events", "all");
 
-      tooltip
-        .attr('x', newX)
-        .attr('y', newY)
-        .text(Format(d.value))
-        .transition().duration(200)
-        .style('opacity', 1);
-    })
-    .on("mouseout", function() {
-      tooltip.transition().duration(200)
-        .style("opacity", 0);
-    });
+    // .on("mouseover", function(d, i) {
+    //   newX = parseFloat(d3.select(this).attr('cx')) - 10;
+    //   newY = parseFloat(d3.select(this).attr('cy')) - 10;
+    //
+    //   tooltip
+    //     .attr('x', newX)
+    //     .attr('y', newY)
+    //     .text(Format(d.value))
+    //     .transition().duration(200)
+    //     .style('opacity', 1);
+    // })
+    // .on("mouseout", function() {
+    //   tooltip.transition().duration(200)
+    //     .style("opacity", 0);
+    // });
 
   //Set up the small tooltip for when you hover over a circle
   var tooltip = g.append("text")
