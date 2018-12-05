@@ -1,0 +1,556 @@
+
+<!DOCTYPE html>
+
+<meta charset="utf-8">
+<!-- <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css"> -->
+<link rel="stylesheet" href="https://rawgit.com/tpreusse/radar-chart-d3/master/src/radar-chart.css">
+
+<style>
+body {
+  padding: 20px;
+}
+</style>
+
+<style>
+.radar-chart .area {
+  fill-opacity: 0.7;
+}
+.radar-chart.focus .area {
+  fill-opacity: 0.3;
+}
+.radar-chart.focus .area.focused {
+  fill-opacity: 0.9;
+}
+.area.germany, .germany .circle {
+  fill: #FFD700;
+  stroke: none;
+}
+.area.argentina, .argentina .circle {
+  fill: #ADD8E6;
+  stroke: none;
+}
+</style>
+<div class='radarChart'></div>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script>
+function initChart(data) {
+    var me = this, innerWidth = 650, innerHeight = 650;
+
+    // data.huizhen =  data.meetclinic + data.cloudAppoint;
+    var maxNo = (Math.max( data.huizhen  , data.consult ,data.appointment , data.doctorByPatient , data.doctorToPatiend , data.transfer ))||10;
+    /* Radar chart design created by Nadieh Bremer - VisualCinnamon.com */
+
+    //////////////////////////////////////////////////////////////
+    //////////////////////// Set-Up //////////////////////////////
+    //////////////////////////////////////////////////////////////
+
+    var margin = {
+            top: 10,
+            right: 0,
+            bottom: 10,
+            left: 0
+        },
+        width = innerWidth - margin.left - margin.right,
+        height = innerHeight - margin.top-margin.bottom ;
+    // console.log(width,height);
+    var color = d3.scale.ordinal()
+        // .range(["#f48302", "#f49302", "#f4a302", "#F39838", "#F7BF88","#FBDABC"]);
+// .range(["#ce7604", "#f28b04", "#F4A048", "#F7BD84", "#FBDBBD"]);
+.range(["#663d00", "#F18E23", "#F39838", "#F7BF88","#FBDABC"]);
+    var RadarChart = {
+        defaultConfig: {
+            containerClass: 'radar-chart',
+            w: width,
+            h: width,
+            factor: 0.88,
+            factorLegend: 1,
+            levels: 5,
+            maxValue: maxNo,
+            radians: 2 * Math.PI,
+            color: d3.scale.category10(),
+            axisLine: false,
+            axisText: false,
+            circles: true,
+            radius: 2,
+            axisJoin: function(d, i) {
+                return d.className || i;
+            },
+            transitionDuration: 10
+        },
+        chart: function() {
+            // default config
+            var cfg = Object.create(RadarChart.defaultConfig);
+
+            function radar(selection) {
+                selection.each(function(data) {
+                    var container = d3.select(this);
+                    // allow simple notation
+                    data = data.map(function(datum) {
+                        if(datum instanceof Array) {
+                            datum = {axes: datum};
+                        }
+                        return datum;
+                    });
+
+                    var maxValue = Math.max(cfg.maxValue, d3.max(data, function(d) {
+                        return d3.max(d.axes, function(o){ return o.value; });
+                    }));
+
+                    var allAxis = data[0].axes.map(function(i, j){ return i.axis; });
+                    var total = allAxis.length;
+                    var radius = cfg.factor * Math.min(cfg.w / 2, cfg.h / 2);
+
+                    container.classed(cfg.containerClass, 1);
+
+                    function getPosition(i, range, factor, func){
+                        factor = typeof factor !== 'undefined' ? factor : 1;
+                        return range * (1 - factor * func(i * cfg.radians / total));
+                    }
+                    function getHorizontalPosition(i, range, factor){
+                        return getPosition(i, range, factor, Math.sin);
+                    }
+                    function getVerticalPosition(i, range, factor){
+                        return getPosition(i, range, factor, Math.cos);
+                    }
+
+                    // levels && axises
+                    var levelFactors = d3.range(0, cfg.levels).map(function(level) {
+                        // console.log(level);
+                        return radius * ((level + 1) / cfg.levels);
+                    });
+
+                    var levelGroups = container.selectAll('g.level-group').data(levelFactors);
+
+                    levelGroups.enter().append('g');
+                    levelGroups.exit().remove();
+
+                    levelGroups.attr('class', function(d, i) {
+                        return 'level-group level-group-' + i;
+                    });
+
+                    var levelLine = levelGroups.selectAll('.level').data(function(levelFactor) {
+                        return d3.range(0, total).map(function() { return levelFactor; });
+                    });
+
+                    // levelLine.enter().append('line');
+                    // levelLine.exit().remove();
+
+                    // levelLine
+                    //     .attr('class', 'level')
+                    //     .attr('x1', function(levelFactor, i){ return getHorizontalPosition(i, levelFactor); })
+                    //     .attr('y1', function(levelFactor, i){ return getVerticalPosition(i, levelFactor); })
+                    //     .attr('x2', function(levelFactor, i){ return getHorizontalPosition(i+1, levelFactor); })
+                    //     .attr('y2', function(levelFactor, i){ return getVerticalPosition(i+1, levelFactor); })
+                    //     .attr('transform', function(levelFactor) {
+                    //         return 'translate(' + (cfg.w/2-levelFactor) + ', ' + (cfg.h/2-levelFactor) + ')';
+                    //     });
+
+                    if(cfg.axisLine || cfg.axisText) {
+                        var axis = container.selectAll('.axis').data(allAxis);
+
+                        var newAxis = axis.enter().append('g');
+                        if(cfg.axisLine) {
+                            newAxis.append('line');
+                        }
+                        if(cfg.axisText) {
+                            newAxis.append('text');
+                        }
+
+                        axis.exit().remove();
+
+                        axis.attr('class', 'axis');
+
+                        if(cfg.axisLine) {
+                            axis.select('line')
+                                .attr('x1', cfg.w/2)
+                                .attr('y1', cfg.h/2)
+                                .attr('x2', function(d, i) { return getHorizontalPosition(i, cfg.w / 2, cfg.factor); })
+                                .attr('y2', function(d, i) { return getVerticalPosition(i, cfg.h / 2, cfg.factor); });
+                        }
+
+                        if(cfg.axisText) {
+                            axis.select('text')
+                                .attr('class', function(d, i){
+                                    var p = getHorizontalPosition(i, 0.5);
+
+                                    return 'legend ' +
+                                        ((p < 0.4) ? 'left' : ((p > 0.6) ? 'right' : 'middle'));
+                                })
+                                .attr('dy', function(d, i) {
+                                    var p = getVerticalPosition(i, 0.5);
+                                    return ((p < 0.1) ? '1em' : ((p > 0.9) ? '0' : '0.5em'));
+                                })
+                                .text(function(d) { return d; })
+                                .attr('x', function(d, i){ return getHorizontalPosition(i, cfg.w / 2, cfg.factorLegend); })
+                                .attr('y', function(d, i){ return getVerticalPosition(i, cfg.h / 2, cfg.factorLegend); });
+                        }
+                    }
+
+                    // content
+                    data.forEach(function(d){
+                        d.axes.forEach(function(axis, i) {
+                            axis.x = getHorizontalPosition(i, cfg.w/2, (parseFloat(Math.max(axis.value, 0))/maxValue)*cfg.factor);
+                            axis.y = getVerticalPosition(i, cfg.h/2, (parseFloat(Math.max(axis.value, 0))/maxValue)*cfg.factor);
+                            axis.x1 = getHorizontalPosition(i, cfg.w/2, (parseFloat(Math.max((maxValue*4)/5, 0))/maxValue)*cfg.factor);
+                            axis.y1 = getVerticalPosition(i, cfg.h/2, (parseFloat(Math.max((maxValue*4)/5, 0))/maxValue)*cfg.factor);
+                        });
+                    });
+
+                    var polygon = container.selectAll(".area").data(data, cfg.axisJoin);
+
+                    polygon.enter().append('polygon')
+                        .classed({area: 1, 'd3-enter': 1})
+                        // .on('mouseover', function (d){
+                        //     container.classed('focus', 1);
+                        //     d3.select(this).classed('focused', 1);
+                        // })
+                        // .on('mouseout', function(){
+                        //     container.classed('focus', 0);
+                        //     d3.select(this).classed('focused', 0);
+                        // });
+
+                    polygon.exit()
+                        .classed('d3-exit', 1) // trigger css transition
+                        .transition().duration(cfg.transitionDuration)
+                        .remove();
+
+                    polygon
+                        .each(function(d, i) {
+                            var classed = {'d3-exit': 0}; // if exiting element is being reused
+                            classed['radar-chart-serie' + i] = 1;
+                            if(d.className) {
+                                classed[d.className] = 1;
+                            }
+                            d3.select(this).classed(classed);
+                        })
+                        // styles should only be transitioned with css
+                        .style('stroke', function(d, i) { return cfg.color(i); })
+                        .style('fill', function(d, i) { return color(i); })
+                        .transition().duration(cfg.transitionDuration)
+                    // svg attrs with js
+                        .attr('points',function(d) {
+                            return d.axes.map(function(p) {
+                                return [p.x, p.y].join(',');
+                            }).join(' ');
+                        })
+                        .each('start', function() {
+                            d3.select(this).classed('d3-enter', 0); // trigger css transition
+                        });
+
+                    var polygon = container.selectAll(".myarea").data(data, cfg.axisJoin);
+
+                    polygon.enter().append('polygon')
+                        .classed({area: 1, 'd3-enter': 1})
+                    // .on('mouseover', function (d){
+                    //     container.classed('focus', 1);
+                    //     d3.select(this).classed('focused', 1);
+                    // })
+                    // .on('mouseout', function(){
+                    //     container.classed('focus', 0);
+                    //     d3.select(this).classed('focused', 0);
+                    // });
+
+                    polygon.exit()
+                        .classed('d3-exit', 1) // trigger css transition
+                        .transition().duration(cfg.transitionDuration)
+                        .remove();
+
+                    polygon
+                        .each(function(d, i) {
+                            var classed = {'d3-exit': 0}; // if exiting element is being reused
+                            classed['radar-chart-serie' + i] = 1;
+                            if(d.className) {
+                                classed[d.className] = 1;
+                            }
+                            d3.select(this).classed(classed);
+                        })
+                        // styles should only be transitioned with css
+                        .style('stroke', function(d, i) { return cfg.color(i); })
+                        .style('fill', function(d, i) { return color(i); })
+                        .transition().duration(cfg.transitionDuration)
+                    // svg attrs with js
+                        .attr('points',function(d) {
+                            return d.axes.map(function(p) {
+                                return [p.x, p.y].join(',');
+                            }).join(' ');
+                        })
+                        .each('start', function() {
+                            d3.select(this).classed('d3-enter', 0); // trigger css transition
+                        });
+
+                    if(cfg.circles && cfg.radius) {
+                        var tooltip = container.selectAll('.tooltip').data([1]);
+                        tooltip.enter().append('text').attr('class', 'tooltip');
+
+                        var circleGroups = container.selectAll('g.circle-group').data(data, cfg.axisJoin);
+
+                        circleGroups.enter().append('g').classed({'circle-group': 1, 'd3-enter': 1});
+                        circleGroups.exit()
+                            .classed('d3-exit', 1) // trigger css transition
+                            .transition().duration(cfg.transitionDuration).remove();
+
+                        circleGroups
+                            .each(function(d) {
+                                var classed = {'d3-exit': 0}; // if exiting element is being reused
+                                if(d.className) {
+                                    classed[d.className] = 1;
+                                }
+                                d3.select(this).classed(classed);
+                            })
+                            .transition().duration(cfg.transitionDuration)
+                            .each('start', function() {
+                                d3.select(this).classed('d3-enter', 0); // trigger css transition
+                            });
+
+                        var circle = circleGroups.selectAll('.circle').data(function(datum, i) {
+                            return datum.axes.map(function(d) { return [d, i]; });
+                        });
+
+
+                        circle.enter()
+                            .append("rect")
+                            .attr("class", function(d, i) {
+
+                            // console.log(this.parentNode);
+                            return "tooltip " + d[0].class
+                        })
+                            // .attr("cx", function(d, i) {
+                            //   return rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2);
+                            // })
+                            // .attr("cy", function(d, i) {
+                            //   return rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2);
+                            // })
+                            .attr('x', function(d, i) {
+                                // console.log(this.parentNode);
+                                return (d[0].class!='consult' && d[0].class!='appo')? d[0].x1 +6 : d[0].x1 - 16;
+                                // return d[0].class!='consult'? d[0].x1 +6:d[0].x1 - 76
+                            })
+                            .attr('y', function(d, i) {
+                                return d[0].y1 - 5
+                                // return d[0].class!='pat'?(d[0].class!='consult'?d[0].y1 - 5:d[0].y1 - 25) : d[0].y1 - 29
+                            })
+                            .attr('rx', "5")
+                            .attr('ry', "5")
+                            .text(function(d, i) {
+                                // console.log(i);
+                                // return d[1]<5 ? '': (d[0].value>0?d[0].value:'');
+                            })
+                            .transition().duration(20)
+                            .style('opacity', function(d, i) {
+                                // console.log(this.parentNode);
+                                return (d[1]>=5&&d[0].value>0)?0.6:0;
+                            });
+                        circle.enter()
+                            .append("text")
+                            .attr("class", "tooltiptext")
+                            // .attr("cx", function(d, i) {
+                            //   return rScale(d.value) * Math.cos(angleSlice * i - Math.PI / 2);
+                            // })
+                            // .attr("cy", function(d, i) {
+                            //   return rScale(d.value) * Math.sin(angleSlice * i - Math.PI / 2);
+                            // })
+                            .attr('x', function(d, i) {
+                                // console.log(this.parentNode);
+                                return (d[0].class!='consult' && d[0].class!='appo')?d[0].x1 +12:d[0].x1-10;
+                                // return d[0].class!='consult'?d[0].x1 +12:d[0].x1 -70
+                            })
+                            .attr('y', function(d, i) {
+                                return d[0].y1 + 14;
+                                // return d[0].class!='pat'?(d[0].class!='consult'?d[0].y1 + 14:d[0].y1 -6) : d[0].y1 -10
+                            })
+                            .text(function(d, i) {
+                                // console.log(d);
+                                return d[1]<5 ? '': (d[0].value>0?d[0].axis+ " : " + d[0].value:'');
+                            })
+                            .transition().duration(20);
+                            // .append("text")
+                            // .text(function(d, i) {
+                            //     // console.log(i);
+                            //     return d[1]<5 ? '': (d[0].value>0?d[0].value:'');
+                            // });
+
+                        circle.enter().append('circle')
+                            .classed({circle: 1, 'd3-enter': 1})
+                            .on('mouseover', function(d){
+                                tooltip
+                                    .attr('x', d[0].x - 10)
+                                    .attr('y', d[0].y - 5)
+                                    .text(d[0].value)
+                                    .classed('visible', 1);
+
+                                container.classed('focus', 1);
+                                container.select('.area.radar-chart-serie'+d[1]).classed('focused', 1);
+                            })
+                            .on('mouseout', function(d){
+                                tooltip.classed('visible', 0);
+
+                                container.classed('focus', 0);
+                                container.select('.area.radar-chart-serie'+d[1]).classed('focused', 0);
+                            });
+
+                        circle.exit()
+                            .classed('d3-exit', 1) // trigger css transition
+                            .transition().duration(cfg.transitionDuration).remove();
+
+                        circle
+                            .each(function(d) {
+                                // console.log(d);
+                                var classed = {'d3-exit': 0}; // if exit element reused
+                                classed['radar-chart-serie'+d[1]] = 1;
+                                d3.select(this).classed(classed);
+                            })
+                            // styles should only be transitioned with css
+                            .style('fill', function(d) { return cfg.color(d[1]); })
+                            .transition().duration(cfg.transitionDuration)
+                        // svg attrs with js
+                            .attr('r', cfg.radius)
+                            .attr('cx', function(d) {
+                                return d[0].x;
+                            })
+                            .attr('cy', function(d) {
+                                return d[0].y;
+                            })
+                            .each('start', function() {
+                                d3.select(this).classed('d3-enter', 0); // trigger css transition
+                            });
+
+                        // ensure tooltip is upmost layer
+                        var tooltipEl = tooltip.node();
+                        tooltipEl.parentNode.appendChild(tooltipEl);
+                    }
+                });
+            }
+
+            radar.config = function(value) {
+                if(!arguments.length) {
+                    return cfg;
+                }
+                if(arguments.length > 1) {
+                    cfg[arguments[0]] = arguments[1];
+                }
+                else {
+                    d3.entries(value || {}).forEach(function(option) {
+                        cfg[option.key] = option.value;
+                    });
+                }
+                return radar;
+            };
+
+            return radar;
+        },
+
+    };
+    RadarChart.defaultConfig.color = function() {};
+    RadarChart.defaultConfig.radius = 3;
+    // RadarChart.defaultConfig.w = 400;
+    // RadarChart.defaultConfig.h = 400;
+
+    // var mydata=[
+    //     {axis: "力量", value: 10},
+    //     {axis: "智力", value: 3},
+    //     {axis: "魅力", value: 10},
+    //     {axis: "灵巧", value: 9},
+    //     {axis: "运气", value: 5},
+    //     {axis: "运气1", value: 0}
+    // ];
+    var data = [
+        {
+            className: 'level-test', // optional can be used for styling
+            axes: [
+                {axis: "咨询", value: 13},
+                {axis: "预约", value: 13},
+                {axis: "转诊", value: 13},
+                {axis: "会诊", value: 13},
+                {axis: "医生关注患者", value: 13},
+                {axis: "被患者关注", value: 13}
+            ]
+        },
+        {
+            className: 'germany6', // optional can be used for styling
+            axes: [
+                {axis: "咨询", value: 13},
+                {axis: "预约", value: 13},
+                {axis: "转诊", value: 13},
+                {axis: "会诊", value: 13},
+                {axis: "医生关注患者", value: 13},
+                {axis: "被患者关注", value: 13}
+            ]
+        },
+        {
+            className: 'germany2', // optional can be used for styling
+            axes: [
+                {axis: "咨询", value: 13},
+                {axis: "预约", value: 13},
+                {axis: "转诊", value: 13},
+                {axis: "会诊", value: 13},
+                {axis: "医生关注患者", value: 13},
+                {axis: "被患者关注", value: 13}
+            ]
+        },
+        {
+            className: 'germany4', // optional can be used for styling
+            axes: [
+                {axis: "咨询", value: 13},
+                {axis: "预约", value: 13},
+                {axis: "转诊", value: 13},
+                {axis: "会诊", value: 13},
+                {axis: "医生关注患者", value: 13},
+                {axis: "被患者关注", value: 13}
+            ]
+        },
+        {
+            className: 'argentina',
+            axes: [
+                {axis: "咨询", value: 13},
+                {axis: "预约", value: 13},
+                {axis: "转诊", value: 13},
+                {axis: "会诊", value: 13},
+                {axis: "医生关注患者", value: 13},
+                {axis: "被患者关注", value: 13}
+            ]
+        },
+        {
+            className: 'realdata',
+            axes: [
+                {axis: "咨询量", class:"consult", value: data.consult},
+                {axis: "预约量", class:"appo",value: data.appointment},
+                {axis: "转诊量", class:"trans",value: data.transfer},
+                {axis: "会诊量", class:"cloud",value: data.huizhen},
+                {axis: "医生关注患者的量", class:"doc",value: data.doctorToPatiend},
+                {axis: "被患者关注的量", class:"pat", value: data.doctorByPatient}
+            ]
+        }
+    ];
+    function randomDataset() {
+        return data.map(function(d,i) {
+            return {
+                className: d.className,
+                axes: d.axes.reverse().map(function(axis) {
+                    return {axis: axis.axis, class:axis.class,value: i<5?(i+1)*(cfg.maxValue/5):axis.value};
+                })
+            };
+        });
+    }
+    var chart = RadarChart.chart();
+    var cfg = chart.config(); // retrieve default config
+    // console.log(cfg.w,cfg.h);
+    var svg = d3.select('.radarChart').append('svg')
+        .attr('width', cfg.w )
+        .attr('height', cfg.h);
+    svg.append('g').classed('single', 1).datum(randomDataset()).call(chart);
+
+// // many radars
+//         chart.config({w: cfg.w , h: cfg.h , axisText: false, levels: 0, circles: false});
+//         cfg = chart.config();
+}
+initChart({huizhen:10});
+//render();
+</script>
+
+<!--
+<h2>Simple single chart drawing</h2>
+<div class="chart-container"></div>
+<script>
+RadarChart.draw(".chart-container", data);
+</script>
+-->
